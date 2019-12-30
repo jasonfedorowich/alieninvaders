@@ -16,6 +16,7 @@ private:
 	boxcollider* _boxcollider;
 	int damage;
 	ALLEGRO_BITMAP* bitmap;
+	const char* on_end_file;
 public:
 	friend class colliderbodybuilder;
 	twodcolliderbody();
@@ -25,7 +26,7 @@ public:
 	
 	virtual void draw();
 	boxcollider* get_collider();
-
+	const char* get_on_end_file();
 	int get_damage();
 	void set_damage(int);
 };
@@ -36,6 +37,7 @@ class colliderbodybuilder : public gameobjectbuilder{
 private:
 	int damage;
 	const char* image;
+	const char* on_end;
 public:
 	colliderbodybuilder();
 	~colliderbodybuilder();
@@ -43,7 +45,7 @@ public:
 
 	colliderbodybuilder* set_damage(int);
 	colliderbodybuilder* set_image(const char*);
-
+	colliderbodybuilder* set_on_end(const char*);
 	twodcolliderbody* build_blast();
 
 };

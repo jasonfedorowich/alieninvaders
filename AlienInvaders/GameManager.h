@@ -18,7 +18,6 @@
 #include "enemy.h"
 #include "explosion.h"
 #include "physicsengine.h"
-#include "GameManager.h"
 #include "staticdisplayfactory.h";
 #include "spritefactory.h"
 #include <Windows.h>
@@ -30,9 +29,15 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include "score.h"
+#include "constants.h"
+#include "healthbar.h"
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
+static const std::string DEFAULT_HEALTH_BAR_SETTINGS_LOCATION = "../resources/gamedata/constants/healthbar.xml";
+static const std::string DEFAULT_GAME_SETTINGS_LOCATION = "../resources/gamedata/constants/constants.xml";
 
 
 std::string format_string(int score, char pad_with, int number_to_pad_to) {

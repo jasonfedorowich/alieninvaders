@@ -17,6 +17,7 @@ twodcolliderbody::twodcolliderbody(colliderbodybuilder* builder) : gameobject(bu
 {
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
 	this->damage = builder->damage;
+	this->on_end_file = builder->on_end;
 
 	ALLEGRO_BITMAP* bitmap = al_load_bitmap(builder->image);
 	if (!bitmap)
@@ -51,6 +52,11 @@ boxcollider* twodcolliderbody::get_collider()
 	return _boxcollider;
 }
 
+const char* twodcolliderbody::get_on_end_file()
+{
+	return this->on_end_file;
+}
+
 int twodcolliderbody::get_damage()
 {
 	return this->damage;
@@ -78,6 +84,12 @@ colliderbodybuilder* colliderbodybuilder::set_damage(int damage)
 colliderbodybuilder* colliderbodybuilder::set_image(const char* image)
 {
 	this->image = image;
+	return this;
+}
+
+colliderbodybuilder* colliderbodybuilder::set_on_end(const char* img)
+{
+	this->on_end = img;
 	return this;
 }
 

@@ -120,6 +120,12 @@
     <ClCompile Include="score.cpp">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="healthbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blast.h">
@@ -193,6 +199,9 @@
     </ClInclude>
     <ClInclude Include="score.h">
       <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="healthbar.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

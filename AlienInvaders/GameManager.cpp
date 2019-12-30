@@ -1,7 +1,9 @@
 #include "GameManager.h"
+
 //#include "functions.cpp"
 //TODO
-//abstract out the constants like files they will go in constants and be set by GM
+//abstract out the constants like files they will go in constants and be set by GM -- 
+	//using XML need function and need to remove the constants
 //fix shooting of enermies
 //fix sorting layerphysics for enemies
 //do we need player controller?
@@ -11,7 +13,8 @@
 //include state of game high score saving and maybe boss fights
 //introduce special weapon functionality
 //add health bar
-
+game_constants _constants = game_constants::load(DEFAULT_GAME_SETTINGS_LOCATION);
+healthbar_serializer _health_bar = healthbar_serializer::load(DEFAULT_HEALTH_BAR_SETTINGS_LOCATION);
 ALLEGRO_EVENT_QUEUE* a_event_q = NULL;
 ALLEGRO_TIMER* timer = NULL;
 ALLEGRO_DISPLAY* disp = NULL;
@@ -21,12 +24,15 @@ ALLEGRO_THREAD* blast_thread = NULL;
 ALLEGRO_THREAD* cleanup_thread = NULL;
 ALLEGRO_THREAD* stars_thread = NULL;
 controller* _enemycontroller = new enemycontroller();
+colliderbodybuilder enemy_blast_builder;
+colliderbodybuilder _colliderbodybuilder;
 //queue<explosion*, 5>* ex_queue = new queue<explosion*, 5>();
 
- std::vector<gameobject*> blasts;
- std::vector<gameobject*> enemies;
- std::vector<gameobject*> enemy_blasts;
- ALLEGRO_FONT* font;
+std::vector<gameobject*> blasts;
+std::vector<gameobject*> enemies;
+std::vector<gameobject*> enemy_blasts;
+ALLEGRO_FONT* font;
+healthbar* _healthbar;
 
 struct explosion_drawer;
 static std::vector<staticdisplayobject*>* explosions;
@@ -105,28 +111,44 @@ void init_game()
 	al_register_event_source(a_event_q, al_get_timer_event_source(timer));
 	al_register_event_source(a_event_q, al_get_mouse_event_source());
 
-	//spaceship = new ship();
-	init_ship_animations();
-	init_enemy_animations();
+
+	enemy_blast_builder.set_damage(ENEMY_DAMAGE)
+		->set_image(_constants._enemy._blast._file.c_str())
+		->set_on_end(_constants._enemy._blast._explosion.c_str())
+		->sizex(DEFAULT_BLAST_SIZE)
+		->sizey(DEFAULT_BLAST_SIZE)
+		->sorting_layer(1);
 
 	spritebuilder* objectbuilder = new spritebuilder();
 	objectbuilder->
 		pos_x(100.0)->
 		pos_y(100.0)->
-		sizex(128.0)->
-		sizey(128.0)->
+		sizex(DEFAULT_SIZE)->
+		sizey(DEFAULT_SIZE)->
 		sorting_layer(1);
 	
-	spritebuilder* shipbuilder = (spritebuilder*)objectbuilder;
 
-		shipbuilder->set_health(100.0)->
-		set_animation((*ship::_animations)[1])->set_damage(10);
+		_colliderbodybuilder.set_damage(PLAYER_DAMAGE)
+		->set_image(_constants._player._blast._file.c_str())
+		->set_on_end(_constants._player._blast._explosion.c_str())
+		->sizex(DEFAULT_BLAST_SIZE)
+		->sizey(DEFAULT_BLAST_SIZE)
+		->sorting_layer(1);
+	
+		spritebuilder* shipbuilder = (spritebuilder*)objectbuilder;
+
+		shipbuilder->set_health(PLAYER_HEALTH)
+			->set_animation(_constants._player._animations)
+			->set_damage(PLAYER_DAMAGE)
+			->set_utility(&_colliderbodybuilder)
+			->set_on_end(_constants._player._explosion.c_str());
 
 	spaceship = (ship*)shipbuilder->build_player();
 	delete shipbuilder;
 
 	staticdisplaybuilder* _staticdisplybuilder = new staticdisplaybuilder();
 	_staticdisplybuilder->pos_x(600.0)->pos_y(100.0);
+	//TODO need to put this file in XML
 	_staticdisplybuilder->image("../resources/images/level1.png");
 
 	_background = (background*)_staticdisplybuilder->build_background();
@@ -137,27 +159,14 @@ void init_game()
 	//cleanup_thread = al_create_thread(cleanup, _synchronizer);
 
 	//TODO for test
-	
-	spritebuilder* objectbuilder2 = new spritebuilder();
-	objectbuilder2->pos_x(300.0)->
-		pos_y(300.0)->
-		sizex(128.0)->
-		sizey(128.0)->
-		sorting_layer(1);
-
-	spritebuilder* enemybuilder = (spritebuilder*)objectbuilder2;
-	enemybuilder->set_health(50)->
-		set_animation((*enemy::_animations)[1]);
-
-	enemy* enemy_ = (enemy*)enemybuilder->build_computer();
-	delete enemybuilder;
-	
-	enemies.push_back(enemy_);
 	//explosions = new std::vector<explosion*>();
 	//if (pthread_create(&t0, NULL, create_new_asteroid, NULL) == -1) {
 	//	puts("cant create thread");
 	//}
-
+	staticdisplaybuilder _healthbarbuilder;
+	_healthbarbuilder.pos_x(10)->pos_y(0)->sorting_layer(1);
+	_healthbarbuilder.set_animation(_health_bar._animations);
+	_healthbar = (healthbar*) _healthbarbuilder.build_healthbar();
 }
 
 //TODO need to close resources
@@ -194,7 +203,7 @@ void destroy()
 		al_shutdown_font_addon();
 		al_shutdown_ttf_addon();
 		delete _physicsengine;
-	
+		delete _enemycontroller;
 	}
 	catch (std::exception e) {
 		OutputDebugString(e.what());
@@ -273,7 +282,7 @@ void draw_all() {
 		draw(explosions);
 		draw(&enemies);
 		draw(&enemy_blasts);
-	
+		_healthbar->draw(spaceship->get_health());
 		int i;
 		ALLEGRO_COLOR color = al_map_rgb(255, 255, 255);
 		for (i = 0; i < _points->size(); i++) {
@@ -305,23 +314,35 @@ void calculate_collisions() {
 	
 
 }
-
+//TODO clean up resources
 void spawn_enemies() {
 	int random_number = rand() % 50;
-	sprite* _sprite;
+	std::vector<std::string> animations = _constants._enemy._animations;
+	const char* blast_file = _constants._enemy._blast._file.c_str();
 	if (random_number == 1) {
-		_sprite = spritefactory::create_generic_enemy(SCREEN_WIDTH);
-		if (!_sprite)
+		int x = rand() % SCREEN_WIDTH;
+		spritebuilder _enemybuilder;
+		_enemybuilder.sizex(DEFAULT_SIZE)->sizey(DEFAULT_SIZE)->sorting_layer(1);
+		_enemybuilder.set_health(ENEMY_HEALTH)
+			->set_animation(_constants._enemy._animations)
+			->set_damage(ENEMY_DAMAGE)
+			->set_on_end(_constants._enemy._explosion.c_str())
+			->set_utility(&enemy_blast_builder);
+		_enemybuilder.pos_x(x)->pos_y(-10);
+		enemy* _enemy = (enemy*)_enemybuilder.build_computer();
+
+		if (!_enemy)
 			throw std::exception("Failed to generate a new enemy");
-		enemies.push_back(_sprite);
+		enemies.push_back(_enemy);
 	}
 }
 
 void update_all_enemies() {
 	
 	try {
+		//TODO use parameter speed to move sprite
 		for (int i = 0; i < enemies.size(); i++) {
-			_enemycontroller->move_sprite(enemies[i], NULL);
+			_enemycontroller->move_sprite(enemies[i], ENEMY_SPEED, NULL);
 			_enemycontroller->fire(enemies[i], &enemy_blasts);
 		}
 	}
@@ -337,7 +358,7 @@ void update()
 	try {
 
 		for (int i = 0; i < blasts.size(); i++) {
-			blasts[i]->increment_y_pos(blast::blast_speed);
+			blasts[i]->increment_y_pos(BLAST_SPEED);
 		}
 	}
 	catch (std::exception e) {
@@ -348,7 +369,7 @@ void update()
 	
 	try {
 		for (int i = 0; i < enemy_blasts.size(); i++) {
-			enemy_blasts[i]->increment_y_pos(blast::enemy_blast_speed);
+			enemy_blasts[i]->increment_y_pos(ENEMY_BLAST_SPEED);
 		}
 	}catch (std::exception e) {
 		std::stringstream _ss;
@@ -471,13 +492,18 @@ int main()
 
 		if (redraw && al_is_event_queue_empty(a_event_q)) {
 			al_clear_to_color(al_map_rgb(0, 0, 0));
-
-
 			
 		}
 	}
-
+	//TODO this will have to be changed once we remove this hard loop		
+		//need user input to get name
 	
+	scoreboard _scoreboard("../resources/gamedata/highscores/highscores.txt");
+	_scoreboard.add("jason", score);
+	_scoreboard.sort();
+	_scoreboard.trim();
+	_scoreboard.save();
+
 	destroy();
 
 	//void* result;

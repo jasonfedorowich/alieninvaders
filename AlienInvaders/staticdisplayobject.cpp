@@ -2,7 +2,7 @@
 #include <exception>
 #include "explosion.h"
 #include "background.h"
-
+#include "healthbar.h"
 
 staticdisplayobject::staticdisplayobject()
 {
@@ -12,7 +12,20 @@ staticdisplayobject::staticdisplayobject()
 staticdisplayobject::~staticdisplayobject()
 {
 	//FIX this
-	al_destroy_bitmap(bitmap);
+	try {
+		if (bitmap != NULL)
+			al_destroy_bitmap(bitmap);
+		for (auto it = this->_animations.begin(); it != this->_animations.end(); it++) {
+			if (it->second != NULL) {
+				al_destroy_bitmap(it->second);
+			}
+		}
+	}
+	catch (std::exception e) {
+		
+	}
+	
+
 }
 
 staticdisplayobject::staticdisplayobject(staticdisplaybuilder* builder) : gameobject(builder)
@@ -20,11 +33,8 @@ staticdisplayobject::staticdisplayobject(staticdisplaybuilder* builder) : gameob
 	this->drawn = builder->drawn;
 	this->factor_x = builder->factor_x;
 	this->factor_y = builder->factor_y;
-
-	ALLEGRO_BITMAP* bitmap = al_load_bitmap(builder->img);
-	if (!bitmap)
-		throw std::exception("Failed to init bitmap");
-	this->bitmap = bitmap;
+	this->_animations = builder->_animations;
+	this->bitmap = builder->_bitmap;
 }
 
 void staticdisplayobject::draw()
@@ -47,6 +57,16 @@ float staticdisplayobject::get_factor_y()
 	return this->factor_y;
 }
 
+std::map<int, ALLEGRO_BITMAP*> staticdisplayobject::get_animations()
+{
+	return this->_animations;
+}
+
+void staticdisplayobject::set_bitmap(ALLEGRO_BITMAP* _bitmap)
+{
+	this->bitmap = _bitmap;
+}
+
 void staticdisplayobject::draw(bool drawn)
 {
 	this->drawn = drawn;
@@ -66,7 +86,10 @@ staticdisplaybuilder* staticdisplaybuilder::is_drawn(bool drawn)
 
 staticdisplaybuilder* staticdisplaybuilder::image(const char* img)
 {
-	this->img = img;
+	ALLEGRO_BITMAP* bitmap = al_load_bitmap(img);
+	if (!bitmap)
+		throw std::exception("Failed to init bitmap");
+	this->_bitmap = bitmap;
 	return this;
 }
 
@@ -90,5 +113,26 @@ staticdisplayobject* staticdisplaybuilder::build_explosion()
 staticdisplayobject* staticdisplaybuilder::build_background()
 {
 	return new background(this);
+}
+
+staticdisplayobject* staticdisplaybuilder::build_healthbar()
+{
+	return new healthbar(this);
+}
+
+staticdisplaybuilder* staticdisplaybuilder::set_animation(std::map<int, std::string> _anims)
+{
+	
+	std::map<int, std::string>::iterator it;
+	std::map<int, ALLEGRO_BITMAP*> _bitmaps;
+	ALLEGRO_BITMAP* bitmap;
+	for (it = _anims.begin(); it != _anims.end(); it++) {
+		bitmap = al_load_bitmap(it->second.c_str());
+		if (!bitmap)
+			throw std::exception("Failed to init spaceship bitmap");
+		_bitmaps[it->first] = bitmap;
+	}
+	this->_animations = _bitmaps;
+	return this;
 }
 

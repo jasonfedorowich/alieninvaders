@@ -7,14 +7,12 @@ class enemy : public sprite
 {
 private:
 	float x_rate;
-	const char* blast_file;
 
 public:
-	static std::map<int, std::vector<const char*>>* _animations;
 	enemy();
 	enemy(spritebuilder* builder);
 	~enemy();
-	void move();
+	void move(float);
 
 	void delete_enemy_resouces();
 
@@ -25,4 +23,3 @@ public:
 
 };
 
-void init_enemy_animations();

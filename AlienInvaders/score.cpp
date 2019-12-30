@@ -15,7 +15,7 @@ std::vector<std::string> split(std::string str, char delim = ' ') {
 		current = str.find(delim, previous);
 	}
 	cont.push_back(str.substr(previous, current - previous));
-
+	return cont;
 }
 
 bool score_comparator(score _scoreA, score _scoreB) {
@@ -54,7 +54,7 @@ void scoreboard::save()
 	std::ofstream file(file_name, std::ios::trunc);
 	if (file.is_open()) {
 		for (score _score : scores) {
-			file << _score.name << " " << _score.value;
+			file << _score.name << " " << _score.value << std::endl;
 		}
 		file.close();
 	}

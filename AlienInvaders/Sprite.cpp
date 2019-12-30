@@ -16,7 +16,8 @@ sprite::sprite(spritebuilder* builder) : gameobject(builder)
 	this->health = builder->health;
 	this->_animation = builder->_animation;
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
-	
+	this->utility = builder->utility;
+	this->on_end_file = builder->on_end_file;
 	if (!_boxcollider)
 		throw std::exception("Failed to create a new box collider");
 	this->dmg = builder->dmg;
@@ -27,6 +28,7 @@ sprite::~sprite()
 {
 	delete _boxcollider;
 	delete _animation;
+
 }
 
 
@@ -70,6 +72,18 @@ void sprite::remove_health(int damage)
 }
 
 
+
+const char* sprite::get_on_end_file()
+{
+	return this->on_end_file;
+}
+
+void* sprite::get_utility()
+{
+	return utility;
+}
+
+
 int sprite::get_damage() {
 	return this->dmg;
 }
@@ -78,16 +92,16 @@ staticdisplayobject* sprite::explode()
 {
 	return staticdisplayfactory::create_explosion(this->get_x_position(),
 		this->get_y_position(),
-		SPRITE_SIZE, SPRITE_SIZE, SPRITE_EXPLOSION);
+		this->get_size_x(), this->get_size_y(), this->get_on_end_file());
 }
 
 
-spritebuilder* spritebuilder::set_animation(std::vector<const char*> bitmapstrs)
+spritebuilder* spritebuilder::set_animation(std::vector<std::string> bitmapstrs)
 {
 	std::vector< ALLEGRO_BITMAP*> bitmaps;
 
 	for (auto str : bitmapstrs) {
-		ALLEGRO_BITMAP* bitmap = al_load_bitmap(str);
+		ALLEGRO_BITMAP* bitmap = al_load_bitmap(str.c_str());
 		if (!bitmap)
 			throw std::exception("Failed to init spaceship bitmap");
 		bitmaps.push_back(bitmap);
@@ -99,6 +113,19 @@ spritebuilder* spritebuilder::set_animation(std::vector<const char*> bitmapstrs)
 
 	return this;
 }
+
+spritebuilder* spritebuilder::set_utility(void* utility)
+{
+	this->utility = utility;
+	return this;
+}
+
+spritebuilder* spritebuilder::set_on_end(const char* file)
+{
+	this->on_end_file = file;
+	return this;
+}
+
 
 sprite* spritebuilder::build_player()
 {

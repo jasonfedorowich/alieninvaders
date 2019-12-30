@@ -2,6 +2,7 @@
 #include "animation.h"
 #include "gameobject.h"
 #include "staticdisplayobject.h"
+#include <string>
 
 #pragma once
 class spritebuilder;
@@ -13,6 +14,8 @@ private:
 	animation* _animation;
 	int health;
 	int dmg;
+	const char* on_end_file;
+	void* utility;
 public:
 	friend class spritebuilder;
 
@@ -26,10 +29,9 @@ public:
 	int get_health();
 	bool take_damage(int);
 	void remove_health(int damage);
-
-
-
-
+	
+	const char* get_on_end_file();
+	void* get_utility();
 	int get_damage();
 	staticdisplayobject* explode();
 
@@ -40,6 +42,9 @@ private:
 	int health;
 	animation* _animation;
 	int dmg;
+	const char* on_end_file;
+	void* utility;
+	
 public:
 	friend class sprite;
 	spritebuilder();
@@ -47,7 +52,10 @@ public:
 
 	spritebuilder* set_health(float);
 	spritebuilder* set_damage(float dmg);
-	spritebuilder* set_animation(std::vector<const char*>);
+	spritebuilder* set_animation(std::vector<std::string>);
+
+	spritebuilder* set_utility(void*);
+	spritebuilder* set_on_end(const char* file);
 	sprite* build_player();
 	sprite* build_computer();
 };

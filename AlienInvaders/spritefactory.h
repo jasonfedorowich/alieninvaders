@@ -6,6 +6,6 @@ public:
 	spritefactory();
 	~spritefactory();
 
-	static sprite* create_generic_enemy(int);
+	static sprite* create_generic_enemy(float, float, void*);
 };
 

@@ -19,11 +19,6 @@ public:
 
 
 	staticdisplayobject* explode() override;
-
-	static float blast_speed;
-	static float blast_size_x;
-	static float blast_size_y;
-	static float enemy_blast_speed;
 	
 
 

@@ -12,11 +12,11 @@ enemycontroller::~enemycontroller()
 {
 }
 
-void enemycontroller::move_sprite(void* arg1, void* arg2)
+void enemycontroller::move_sprite(void* arg1, float y_speed, float x_speed)
 {
 	try {
 		enemy* _enemy = (enemy*)arg1;
-		_enemy->move();
+		_enemy->move(y_speed);
 	}
 	catch (std::exception e) {
 		throw std::exception(e.what());

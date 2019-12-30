@@ -6,6 +6,7 @@ class colliderfactory
 public:
 	colliderfactory();
 	~colliderfactory();
-	static twodcolliderbody* create_2d_collider(float, float, int, const char*);
+	static twodcolliderbody* create_2d_collider(float, float, void*);
+
 };
 

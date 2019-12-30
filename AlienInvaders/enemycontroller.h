@@ -7,7 +7,7 @@ public:
 	~enemycontroller();
 
 	// Inherited via controller
-	virtual void move_sprite(void*, void*) override;
+	virtual void move_sprite(void*, float, float) override;
 	virtual void fire(void*, void*) override;
 };
 

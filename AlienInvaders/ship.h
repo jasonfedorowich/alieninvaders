@@ -11,10 +11,9 @@ class ship : public sprite
 {
 
 private: 
-	const char* blast_file;
+
 
 public:
-	static std::map<int, std::vector<const char*>>* _animations;
 	ship();
 	ship(spritebuilder*);
 	~ship();
@@ -27,7 +26,6 @@ public:
 
 };
 
-void init_ship_animations();
 
 
 
