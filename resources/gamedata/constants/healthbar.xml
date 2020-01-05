@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!DOCTYPE boost_serialization>
+<boost_serialization signature="serialization::archive" version="17">
+<_healthbar class_id="0" tracking_level="0" version="0">
+	<_animations class_id="1" tracking_level="0" version="0">
+		<count>11</count>
+		<item_version>0</item_version>
+		<item class_id="2" tracking_level="0" version="0">
+			<first>100</first>
+			<second>../resources/images/healthbar/healthbar1.png</second>
+		</item>
+		<item>
+			<first>90</first>
+			<second>../resources/images/healthbar/healthbar2.png</second>
+		</item>
+		<item>
+			<first>80</first>
+			<second>../resources/images/healthbar/healthbar3.png</second>
+		</item>
+		<item>
+			<first>70</first>
+			<second>../resources/images/healthbar/healthbar4.png</second>
+		</item>
+		<item>
+			<first>60</first>
+			<second>../resources/images/healthbar/healthbar5.png</second>
+		</item>
+		<item>
+			<first>50</first>
+			<second>../resources/images/healthbar/healthbar6.png</second>
+		</item>
+		<item>
+			<first>40</first>
+			<second>../resources/images/healthbar/healthbar7.png</second>
+		</item>
+		<item>
+			<first>30</first>
+			<second>../resources/images/healthbar/healthbar8.png</second>
+		</item>
+		<item>
+			<first>20</first>
+			<second>../resources/images/healthbar/healthbar9.png</second>
+		</item>
+		<item>
+			<first>10</first>
+			<second>../resources/images/healthbar/healthbar10.png</second>
+		</item>
+		<item>
+			<first>0</first>
+			<second>../resources/images/healthbar/healthbar11.png</second>
+		</item>
+	</_animations>
+</_healthbar>
+</boost_serialization>
+
