@@ -16,19 +16,18 @@ sprite::sprite(spritebuilder* builder) : gameobject(builder)
 	this->health = builder->health;
 	this->_animation = builder->_animation;
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
-	this->utility = builder->utility;
+	this->_utilities = builder->_utilities;
 	this->on_end_file = builder->on_end_file;
 	if (!_boxcollider)
 		throw std::exception("Failed to create a new box collider");
 	this->dmg = builder->dmg;
-
+	this->_spritestate = spritestate::ALIVE;
 }
 
 sprite::~sprite()
 {
 	delete _boxcollider;
 	delete _animation;
-
 }
 
 
@@ -56,11 +55,15 @@ int sprite::get_health()
 {
 	return this->health;
 }
+//TODO maybe fix this method
 
 bool sprite::take_damage(int dmg)
 {
 	health -= dmg;
-	return (health > 0);
+	if (health > 0)
+		return true;
+	this->_spritestate = spritestate::DEAD;
+	return false;
 }
 
 void sprite::remove_health(int damage)
@@ -71,6 +74,11 @@ void sprite::remove_health(int damage)
 		this->health = 0;
 }
 
+spritestate sprite::get_state()
+{
+	return this->_spritestate;
+}
+
 
 
 const char* sprite::get_on_end_file()
@@ -78,9 +86,9 @@ const char* sprite::get_on_end_file()
 	return this->on_end_file;
 }
 
-void* sprite::get_utility()
+std::vector<void*> sprite::get_utilities()
 {
-	return utility;
+	return _utilities;
 }
 
 
@@ -98,13 +106,13 @@ staticdisplayobject* sprite::explode()
 
 spritebuilder* spritebuilder::set_animation(std::vector<std::string> bitmapstrs)
 {
-	std::vector< ALLEGRO_BITMAP*> bitmaps;
+	std::vector<ALLEGRO_BITMAP*>* bitmaps = new std::vector<ALLEGRO_BITMAP*>();
 
 	for (auto str : bitmapstrs) {
 		ALLEGRO_BITMAP* bitmap = al_load_bitmap(str.c_str());
 		if (!bitmap)
 			throw std::exception("Failed to init spaceship bitmap");
-		bitmaps.push_back(bitmap);
+		bitmaps->push_back(bitmap);
 	}
 	this->_animation = new animation(bitmaps);
 	
@@ -114,9 +122,9 @@ spritebuilder* spritebuilder::set_animation(std::vector<std::string> bitmapstrs)
 	return this;
 }
 
-spritebuilder* spritebuilder::set_utility(void* utility)
+spritebuilder* spritebuilder::add_utility(void* utility)
 {
-	this->utility = utility;
+	_utilities.push_back(utility);
 	return this;
 }
 

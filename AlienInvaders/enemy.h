@@ -11,10 +11,10 @@ private:
 public:
 	enemy();
 	enemy(spritebuilder* builder);
-	~enemy();
+	virtual ~enemy();
 	void move(float);
 
-	void delete_enemy_resouces();
+	void reverse_x_rate();
 
 	twodcolliderbody* fire();
 

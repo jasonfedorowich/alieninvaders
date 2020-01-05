@@ -13,7 +13,7 @@ sortingphysics::~sortingphysics()
 }
 
 //TODO need to change this to add enemy interaction
-int sortingphysics::evaluate(void* arg1, void* arg2, void* arg3)
+int sortingphysics::evaluate(void* arg1, void* arg2, void* arg3, void* action(void*, void*))
 {
 	bool* same_layer;
 	try {
@@ -26,6 +26,8 @@ int sortingphysics::evaluate(void* arg1, void* arg2, void* arg3)
 			_spriteB = (*_sprites)[i];
 			if (_spriteB->get_sorting_layer() == _spriteA->get_sorting_layer())
 				if (_spriteA!= _spriteB && is_collision(((*_sprites)[i])->get_collider(), _spriteA->get_collider())) {
+					if(action!=NULL)
+						action(_spriteA, _spriteB);
 					*same_layer = true;
 					return 1;
 				}

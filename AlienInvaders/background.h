@@ -9,7 +9,7 @@ private:
 public:
 	background(staticdisplaybuilder*);
 	background();
-	~background();
+	virtual ~background();
 
 	virtual void draw() override;
 

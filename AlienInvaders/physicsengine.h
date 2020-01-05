@@ -12,9 +12,9 @@ public:
 	physicsengine();
 	~physicsengine();
 
-	int evaluate_collisions(void* object1, void* object2, void* object3);
-	int evaluate_sorting(void* object1, void* object2, void* object3);
-
+	int evaluate_collisions(void* object1, void* object2, void* object3, void* action(void*, void*));
+	int evaluate_sorting(void* object1, void* object2, void* object3, void* action(void*, void*));
+	int evaluate_bouncing(void* object1, void* object2, void* object3, void* action(void*, void*));
 
 
 };

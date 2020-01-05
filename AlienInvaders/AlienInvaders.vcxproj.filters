@@ -43,6 +43,12 @@
     <Filter Include="Source Files\physics">
       <UniqueIdentifier>{4b606f92-2770-4247-a4c7-63fe715fd539}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\script">
+      <UniqueIdentifier>{8d1f8d17-e1b2-4211-8c20-4d66cfe6522d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\script">
+      <UniqueIdentifier>{54d96075-695c-4d6e-a039-b247d28afaa9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -126,6 +132,12 @@
     <ClCompile Include="healthbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="behaviour.cpp">
+      <Filter>Source Files\script</Filter>
+    </ClCompile>
+    <ClCompile Include="bouncingphysics.cpp">
+      <Filter>Source Files\physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blast.h">
@@ -202,6 +214,15 @@
     </ClInclude>
     <ClInclude Include="healthbar.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="difficulty.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="behaviour.h">
+      <Filter>Header Files\script</Filter>
+    </ClInclude>
+    <ClInclude Include="bouncingphysics.h">
+      <Filter>Header Files\physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

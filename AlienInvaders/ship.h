@@ -16,11 +16,12 @@ private:
 public:
 	ship();
 	ship(spritebuilder*);
-	~ship();
+	virtual ~ship();
 
 	void delete_ship_resouces();
 
 	std::vector<twodcolliderbody*> fire();
+	twodcolliderbody* fire2();
 	int get_level();
 
 

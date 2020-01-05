@@ -12,7 +12,7 @@ public:
 	friend class gameobjectbuilder;
 	gameobject(gameobjectbuilder*);
 	gameobject();
-	~gameobject();
+	virtual ~gameobject();
 
 	float get_x_position();
 	float get_y_position();
@@ -27,6 +27,7 @@ public:
 
 	void set_position(float, float);
 	void set_y_position(float);
+	void set_x_position(float);
 
 
 	int get_sorting_layer();
@@ -41,6 +42,7 @@ private:
 public:
 	friend class gameobject;
 	gameobject* build();
+	virtual ~gameobjectbuilder();
 	virtual gameobjectbuilder* sizex(float);
 	virtual gameobjectbuilder* sizey(float);
 	virtual gameobjectbuilder* pos_x(float);

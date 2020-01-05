@@ -34,10 +34,17 @@ std::vector<twodcolliderbody*> ship::fire()
 
 	std::vector<twodcolliderbody*> blasts;
 	
-	blasts.push_back(colliderfactory::create_2d_collider(x + 72, y, this->get_utility()));
-	blasts.push_back(colliderfactory::create_2d_collider(x - 8, y, this->get_utility()));
+	blasts.push_back(colliderfactory::create_2d_collider(x + 72, y, this->get_utilities()[0]));
+	blasts.push_back(colliderfactory::create_2d_collider(x - 8, y, this->get_utilities()[0]));
 	
 	return blasts;
+}
+
+twodcolliderbody* ship::fire2()
+{
+	float x = this->get_x_position();
+	float y = this->get_y_position();
+	return colliderfactory::create_2d_collider(x - (this->get_size_x()/2) - 15, y - 270, this->get_utilities()[1]);
 }
 
 int ship::get_level()

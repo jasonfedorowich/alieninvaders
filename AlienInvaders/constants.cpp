@@ -43,6 +43,7 @@ game_constants game_constants::load(std::string path)
 
 		game_constants _constants;
 		ia >> BOOST_SERIALIZATION_NVP(_constants);
+		ia.delete_created_pointers();
 		return _constants;
 	}
 	catch (std::exception e) {

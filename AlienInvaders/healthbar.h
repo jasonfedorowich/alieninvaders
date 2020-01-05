@@ -13,7 +13,7 @@ struct healthbar_serializer {
 		ar& BOOST_SERIALIZATION_NVP(_animations);
 	}
 	healthbar_serializer();
-	~healthbar_serializer();
+	virtual ~healthbar_serializer();
 	std::map<int, std::string> _animations;
 	static healthbar_serializer load(std::string);
 };
@@ -23,7 +23,7 @@ void save(healthbar_serializer, std::string);
 class healthbar: public staticdisplayobject {
 public:
 	healthbar();
-	~healthbar();
+	virtual ~healthbar();
 	healthbar(staticdisplaybuilder*);
 	void draw(int);
 };

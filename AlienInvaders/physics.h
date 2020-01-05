@@ -7,9 +7,9 @@ private:
 
 public:
 	physics();
-	~physics();
+	virtual ~physics();
 	//TODO switch to varags with indexing
-	virtual int evaluate(void*, void*, void*) = 0;
+	virtual int evaluate(void*, void*, void*, void* action(void*, void*)) = 0;
 	
 	//template<class T, class U, class V>
 	//T evaluate(U*, V*) = 0;

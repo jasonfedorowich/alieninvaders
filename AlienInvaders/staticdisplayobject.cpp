@@ -13,10 +13,12 @@ staticdisplayobject::~staticdisplayobject()
 {
 	//FIX this
 	try {
-		if (bitmap != NULL)
+		if (bitmap != NULL) {
 			al_destroy_bitmap(bitmap);
+		}
+			
 		for (auto it = this->_animations.begin(); it != this->_animations.end(); it++) {
-			if (it->second != NULL) {
+			if (it->second != bitmap) {
 				al_destroy_bitmap(it->second);
 			}
 		}
@@ -40,6 +42,12 @@ staticdisplayobject::staticdisplayobject(staticdisplaybuilder* builder) : gameob
 void staticdisplayobject::draw()
 {
 	al_draw_bitmap(this->get_bitmap(), this->get_x_position(), this->get_y_position(), 0);
+}
+
+void staticdisplayobject::draw(int i)
+{
+	this->set_bitmap(this->get_animations()[i]);
+	staticdisplayobject::draw();
 }
 
 ALLEGRO_BITMAP* staticdisplayobject::get_bitmap()
@@ -118,6 +126,11 @@ staticdisplayobject* staticdisplaybuilder::build_background()
 staticdisplayobject* staticdisplaybuilder::build_healthbar()
 {
 	return new healthbar(this);
+}
+
+staticdisplayobject* staticdisplaybuilder::build_image()
+{
+	return new staticdisplayobject(this);
 }
 
 staticdisplaybuilder* staticdisplaybuilder::set_animation(std::map<int, std::string> _anims)

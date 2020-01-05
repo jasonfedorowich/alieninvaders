@@ -33,7 +33,8 @@
 #include "score.h"
 #include "constants.h"
 #include "healthbar.h"
-
+#include "difficulty.h"
+#include <chrono>
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 static const std::string DEFAULT_HEALTH_BAR_SETTINGS_LOCATION = "../resources/gamedata/constants/healthbar.xml";

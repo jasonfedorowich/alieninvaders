@@ -16,12 +16,13 @@ private:
 public:
 	friend class staticdisplaybuilder;
 	staticdisplayobject();
-	~staticdisplayobject();
+	virtual ~staticdisplayobject();
 	staticdisplayobject(staticdisplaybuilder*);
 
 	void draw(bool);
 	bool is_drawn();
 	virtual void draw();
+	virtual void draw(int);
 	ALLEGRO_BITMAP* get_bitmap();
 	float get_factor_x();
 	float get_factor_y();
@@ -47,5 +48,6 @@ public:
 	staticdisplayobject* build_explosion();
 	staticdisplayobject* build_background();
 	staticdisplayobject* build_healthbar();
+	staticdisplayobject* build_image();
 
 };

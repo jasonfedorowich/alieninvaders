@@ -14,13 +14,12 @@ collisionphysics::~collisionphysics()
 {
 }
 
-int collisionphysics::evaluate(void* arg1, void* arg2, void* arg3)
+int collisionphysics::evaluate(void* arg1, void* arg2, void* arg3, void* action(void*, void*))
 {
 	int dmg;
-	sprite* _sprite;
+	
 	twodcolliderbody* _collider;
-
-	std::vector<sprite*>* sprites = (std::vector<sprite*>*) arg1;
+	sprite* _sprite = (sprite*)arg1;
 	std::vector<twodcolliderbody*>* colliders = (std::vector<twodcolliderbody*>*) arg2;
 	std::vector<staticdisplayobject*>* _explosions = (std::vector<staticdisplayobject*>*) arg3;
 	int number_of_collisions = 0;
@@ -30,40 +29,38 @@ int collisionphysics::evaluate(void* arg1, void* arg2, void* arg3)
 
 	//TODO change this as its resizing to much
 	try {
-
-		for (i = sprites->size() - 1; i >= 0; i--) {
-			for (j = colliders->size() - 1; j >= 0; j--) {
-				if (is_collision((*sprites)[i]->get_collider(), (*colliders)[j]->get_collider())) {
+		for (j = colliders->size() - 1; j >= 0; j--) {
+			if (is_collision(_sprite->get_collider(), (*colliders)[j]->get_collider())) {
 					
-					_collider = (*colliders)[j];
-					if (!_collider)
-						throw std::exception("Cannot get a collider at location: " + j);
-					
-					_sprite = (*sprites)[i];
-					if (!_sprite)
-						throw std::exception("Cannot get a sprite at location: " + i);
-					
-					dmg = _collider->get_damage();
+				_collider = (*colliders)[j];
+				if (!_collider)
+					throw std::exception("Cannot get a collider at location: " + j);
+								
+				dmg = _collider->get_damage();
 
-					if (!_sprite->take_damage(dmg)) {
-						_explosions->push_back(_sprite->explode());
-						sprites->erase(sprites->begin() + i);
-						delete _sprite;
-						//sprites_to_remove.push_back(j);
-					}
-
+				if (!_sprite->take_damage(dmg)) {
+					_explosions->push_back(_sprite->explode());
+					//sprites_to_remove.push_back(j);
+					number_of_collisions += 10;
+				}
+					
+				if (!_collider->is_invulerable()) {
 					_explosions->push_back(_collider->explode());
 					colliders->erase(colliders->begin() + j);
 					delete _collider;
-					//delete _blast;
-				//	collider_to_remove.push_back(i);
-					number_of_collisions++;
-					break;
-
 				}
-			}
+					
+				//delete _blast;
+				//	collider_to_remove.push_back(i);
+				if(action!=NULL)
+					action(_sprite, _collider);
+				number_of_collisions++;
+				break;
 
+			}
 		}
+
+		
 	}
 	catch (std::exception e) {
 		throw std::exception(e.what());

@@ -6,6 +6,7 @@
 
 #pragma once
 class spritebuilder;
+enum spritestate;
 
 class sprite : public gameobject
 {
@@ -15,12 +16,13 @@ private:
 	int health;
 	int dmg;
 	const char* on_end_file;
-	void* utility;
+	std::vector<void*> _utilities;
+	spritestate _spritestate;
 public:
 	friend class spritebuilder;
 
 	sprite();
-	~sprite();
+	virtual ~sprite();
 	sprite(spritebuilder* builder);
 
 	virtual void draw();
@@ -29,9 +31,9 @@ public:
 	int get_health();
 	bool take_damage(int);
 	void remove_health(int damage);
-	
+	spritestate get_state();
 	const char* get_on_end_file();
-	void* get_utility();
+	std::vector<void*> get_utilities();
 	int get_damage();
 	staticdisplayobject* explode();
 
@@ -43,20 +45,24 @@ private:
 	animation* _animation;
 	int dmg;
 	const char* on_end_file;
-	void* utility;
+	std::vector<void*> _utilities;
 	
 public:
 	friend class sprite;
 	spritebuilder();
-	~spritebuilder();
+	virtual ~spritebuilder();
 
 	spritebuilder* set_health(float);
 	spritebuilder* set_damage(float dmg);
 	spritebuilder* set_animation(std::vector<std::string>);
 
-	spritebuilder* set_utility(void*);
+	spritebuilder* add_utility(void*);
 	spritebuilder* set_on_end(const char* file);
 	sprite* build_player();
 	sprite* build_computer();
 };
 
+enum spritestate {
+	ALIVE = 1, 
+	DEAD = 0
+};

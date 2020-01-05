@@ -7,7 +7,7 @@ private:
 	
 public:
 	explosion();
-	~explosion();
+	virtual ~explosion();
 	explosion(staticdisplaybuilder*);
 
 	// Inherited via staticgameobject

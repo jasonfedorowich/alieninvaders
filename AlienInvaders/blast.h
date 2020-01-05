@@ -15,7 +15,7 @@ public:
 	blast(colliderbodybuilder*);
 
 	blast();
-	~blast();
+	virtual ~blast();
 
 
 	staticdisplayobject* explode() override;

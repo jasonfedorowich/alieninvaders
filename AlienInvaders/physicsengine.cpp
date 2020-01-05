@@ -21,12 +21,12 @@ physicsengine::~physicsengine()
 
 
 
-int physicsengine::evaluate_collisions(void* object1, void* object2, void* object3)
+int physicsengine::evaluate_collisions(void* object1, void* object2, void* object3, void* action(void*, void*))
 {
-	return (*_physics)["collision"]->evaluate(object1, object2, object3);
+	return (*_physics)["collision"]->evaluate(object1, object2, object3, action);
 }
 
-int physicsengine::evaluate_sorting(void* object1, void* object2, void* object3)
+int physicsengine::evaluate_sorting(void* object1, void* object2, void* object3, void* action(void*, void*))
 {
-	return (*_physics)["sorting"]->evaluate(object1, object2, object3);
+	return (*_physics)["sorting"]->evaluate(object1, object2, object3, action);
 }

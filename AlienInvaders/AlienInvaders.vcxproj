@@ -141,7 +141,9 @@
   <ItemGroup>
     <ClCompile Include="animation.cpp" />
     <ClCompile Include="background.cpp" />
+    <ClCompile Include="behaviour.cpp" />
     <ClCompile Include="blast.cpp" />
+    <ClCompile Include="bouncingphysics.cpp" />
     <ClCompile Include="boxcollider.cpp" />
     <ClCompile Include="colliderfactory.cpp" />
     <ClCompile Include="collisionphysics.cpp" />
@@ -169,12 +171,15 @@
   <ItemGroup>
     <ClInclude Include="animation.h" />
     <ClInclude Include="background.h" />
+    <ClInclude Include="behaviour.h" />
     <ClInclude Include="blast.h" />
+    <ClInclude Include="bouncingphysics.h" />
     <ClInclude Include="boxcollider.h" />
     <ClInclude Include="colliderfactory.h" />
     <ClInclude Include="collisionphysics.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="controller.h" />
+    <ClInclude Include="difficulty.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="enemycontroller.h" />
     <ClInclude Include="explosion.h" />

@@ -17,10 +17,11 @@ private:
 	int damage;
 	ALLEGRO_BITMAP* bitmap;
 	const char* on_end_file;
+	bool _invulnerable;
 public:
 	friend class colliderbodybuilder;
 	twodcolliderbody();
-	~twodcolliderbody();
+	virtual ~twodcolliderbody();
 	twodcolliderbody(colliderbodybuilder*);
 	virtual staticdisplayobject* explode();
 	
@@ -29,6 +30,7 @@ public:
 	const char* get_on_end_file();
 	int get_damage();
 	void set_damage(int);
+	bool is_invulerable();
 };
 
 
@@ -38,6 +40,7 @@ private:
 	int damage;
 	const char* image;
 	const char* on_end;
+	bool _invulnerable;
 public:
 	colliderbodybuilder();
 	~colliderbodybuilder();
@@ -46,6 +49,7 @@ public:
 	colliderbodybuilder* set_damage(int);
 	colliderbodybuilder* set_image(const char*);
 	colliderbodybuilder* set_on_end(const char*);
+	colliderbodybuilder* invulnerability(bool);
 	twodcolliderbody* build_blast();
 
 };

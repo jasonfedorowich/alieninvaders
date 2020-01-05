@@ -11,6 +11,7 @@ twodcolliderbody::twodcolliderbody()
 twodcolliderbody::~twodcolliderbody()
 {
 	al_destroy_bitmap(this->bitmap);
+	delete _boxcollider;
 }
 
 twodcolliderbody::twodcolliderbody(colliderbodybuilder* builder) : gameobject(builder)
@@ -18,6 +19,7 @@ twodcolliderbody::twodcolliderbody(colliderbodybuilder* builder) : gameobject(bu
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
 	this->damage = builder->damage;
 	this->on_end_file = builder->on_end;
+	this->_invulnerable = builder->_invulnerable;
 
 	ALLEGRO_BITMAP* bitmap = al_load_bitmap(builder->image);
 	if (!bitmap)
@@ -36,6 +38,7 @@ void twodcolliderbody::draw()
 	try {
 		float x = this->get_x_position();
 		float y = this->get_y_position();
+
 		al_draw_bitmap(bitmap, x, y, 0);
 	}
 	catch (std::exception e) {
@@ -67,6 +70,11 @@ void twodcolliderbody::set_damage(int dmg)
 	this->damage = dmg;
 }
 
+bool twodcolliderbody::is_invulerable()
+{
+	return _invulnerable;
+}
+
 colliderbodybuilder::colliderbodybuilder()
 {
 }
@@ -90,6 +98,12 @@ colliderbodybuilder* colliderbodybuilder::set_image(const char* image)
 colliderbodybuilder* colliderbodybuilder::set_on_end(const char* img)
 {
 	this->on_end = img;
+	return this;
+}
+
+colliderbodybuilder* colliderbodybuilder::invulnerability(bool invulnerable)
+{
+	this->_invulnerable = invulnerable;
 	return this;
 }
 

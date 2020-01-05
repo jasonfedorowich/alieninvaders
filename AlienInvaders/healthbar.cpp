@@ -15,6 +15,7 @@ healthbar_serializer healthbar_serializer::load(std::string path)
 		boost::archive::xml_iarchive ia(ifs);
 		healthbar_serializer _healthbar;
 		ia >> BOOST_SERIALIZATION_NVP(_healthbar);
+		ia.delete_created_pointers();
 		return _healthbar;
 	}
 	catch (std::exception e) {
@@ -35,6 +36,14 @@ void save(healthbar_serializer _healthbar, std::string path)
 		throw std::exception("Failed to save xml file");
 	}
 
+}
+
+healthbar::healthbar()
+{
+}
+
+healthbar::~healthbar()
+{
 }
 
 healthbar::healthbar(staticdisplaybuilder* builder) : staticdisplayobject(builder)

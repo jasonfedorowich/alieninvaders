@@ -4,7 +4,6 @@
 //TODO
 //abstract out the constants like files they will go in constants and be set by GM -- 
 	//using XML need function and need to remove the constants
-//fix shooting of enermies
 //fix sorting layerphysics for enemies
 //do we need player controller?
 //add main menu
@@ -13,6 +12,11 @@
 //include state of game high score saving and maybe boss fights
 //introduce special weapon functionality
 //add health bar
+//cleanup gamemanager by using a script and running script with two functions update and start
+//TODO need to fix memory problem
+//TODO cleanup gamemanager
+//add gui elements like buttons see above ideas
+//need to have game using gamemanger and have 3 pages start menu/difficulty menu/ and game
 game_constants _constants = game_constants::load(DEFAULT_GAME_SETTINGS_LOCATION);
 healthbar_serializer _health_bar = healthbar_serializer::load(DEFAULT_HEALTH_BAR_SETTINGS_LOCATION);
 ALLEGRO_EVENT_QUEUE* a_event_q = NULL;
@@ -26,13 +30,17 @@ ALLEGRO_THREAD* stars_thread = NULL;
 controller* _enemycontroller = new enemycontroller();
 colliderbodybuilder enemy_blast_builder;
 colliderbodybuilder _colliderbodybuilder;
+colliderbodybuilder _specialbodybuilder;
+int time_of_last_special;
+int is_ready;
 //queue<explosion*, 5>* ex_queue = new queue<explosion*, 5>();
-
+staticdisplayobject* ready_image;
 std::vector<gameobject*> blasts;
 std::vector<gameobject*> enemies;
 std::vector<gameobject*> enemy_blasts;
 ALLEGRO_FONT* font;
 healthbar* _healthbar;
+int _difficulty;
 
 struct explosion_drawer;
 static std::vector<staticdisplayobject*>* explosions;
@@ -48,9 +56,14 @@ static void* cleanup(ALLEGRO_THREAD* thr, void* arg);
 
 void* stars(ALLEGRO_THREAD* thread, void* arg);
 
+void set_difficulty(difficulty _d) {
+	_difficulty = static_cast<int>(_d);
+}
+
+
 bool compare_to_top(void* arg1) {
 	gameobject* _gameobject = (gameobject*)arg1;
-	if (0.0f > _gameobject->get_y_position()) {
+	if (-250.0f > _gameobject->get_y_position()) {
 		return true;
 	}
 	
@@ -59,12 +72,19 @@ bool compare_to_top(void* arg1) {
 
 bool compare_to_bottom(void* arg1) {
 	gameobject* _gameobject = (gameobject*)arg1;
-	if (SCREEN_HEIGHT < _gameobject->get_y_position()) {
+	if (SCREEN_HEIGHT + 250.0f < _gameobject->get_y_position()) {
 		return true;
 	}
 	return false;
 }
 
+void* bounce_enemy(void* arg1, void* arg2) {
+	enemy* _enemyA = (enemy*)arg1;
+	enemy* _enemyB = (enemy*)arg2;
+	_enemyA->reverse_x_rate();
+	_enemyB->reverse_x_rate();
+	return nullptr;
+}
 
 void must_init(bool test, const char* description)
 {
@@ -76,6 +96,12 @@ void must_init(bool test, const char* description)
 
 void init_game()
 {
+	//time_t now = time(0);
+	//tm _tm;
+//	localtime_s(&_tm, &now);
+//	time_of_last_special = _tm.tm_min;
+	
+	is_ready = 0;
 	must_init(al_init(), "allegro");
 	must_init(al_install_keyboard(), "keyboard");
 	must_init(al_init_image_addon(), "image addon");
@@ -84,7 +110,7 @@ void init_game()
 	must_init(al_init_ttf_addon(), "ttf");
 
 	timer = al_create_timer(1.0 / 30.0);
-
+	
 	must_init(timer, "timer");
 
 	a_event_q = al_create_event_queue();
@@ -115,6 +141,7 @@ void init_game()
 	enemy_blast_builder.set_damage(ENEMY_DAMAGE)
 		->set_image(_constants._enemy._blast._file.c_str())
 		->set_on_end(_constants._enemy._blast._explosion.c_str())
+		->invulnerability(false)
 		->sizex(DEFAULT_BLAST_SIZE)
 		->sizey(DEFAULT_BLAST_SIZE)
 		->sorting_layer(1);
@@ -129,18 +156,27 @@ void init_game()
 	
 
 		_colliderbodybuilder.set_damage(PLAYER_DAMAGE)
-		->set_image(_constants._player._blast._file.c_str())
-		->set_on_end(_constants._player._blast._explosion.c_str())
-		->sizex(DEFAULT_BLAST_SIZE)
-		->sizey(DEFAULT_BLAST_SIZE)
-		->sorting_layer(1);
+			->set_image(_constants._player._blast._file.c_str())
+			->set_on_end(_constants._player._blast._explosion.c_str())
+			->invulnerability(false)
+			->sizex(DEFAULT_BLAST_SIZE)
+			->sizey(DEFAULT_BLAST_SIZE)
+			->sorting_layer(1);
 	
+		_specialbodybuilder.set_damage(SPECIAL_DAMAGE)
+			->set_image(_constants._player._special.c_str())
+			->invulnerability(true)
+			->sizex(SPECIAL_BLAST_SIZE_X)
+			->sizey(SPECIAL_BLAST_SIZE_Y)
+			->sorting_layer(1);
+
 		spritebuilder* shipbuilder = (spritebuilder*)objectbuilder;
 
 		shipbuilder->set_health(PLAYER_HEALTH)
 			->set_animation(_constants._player._animations)
 			->set_damage(PLAYER_DAMAGE)
-			->set_utility(&_colliderbodybuilder)
+			->add_utility(&_colliderbodybuilder)
+			->add_utility(&_specialbodybuilder)
 			->set_on_end(_constants._player._explosion.c_str());
 
 	spaceship = (ship*)shipbuilder->build_player();
@@ -164,9 +200,14 @@ void init_game()
 	//	puts("cant create thread");
 	//}
 	staticdisplaybuilder _healthbarbuilder;
-	_healthbarbuilder.pos_x(10)->pos_y(0)->sorting_layer(1);
+	_healthbarbuilder.pos_x(10)->pos_y(-30)->sorting_layer(1);
 	_healthbarbuilder.set_animation(_health_bar._animations);
 	_healthbar = (healthbar*) _healthbarbuilder.build_healthbar();
+
+	staticdisplaybuilder _staticbuilder;
+	_staticbuilder.pos_x(110)->pos_y(-10)->sorting_layer(1);
+	_staticbuilder.set_animation(_constants._notifications);
+	ready_image = _staticbuilder.build_image();
 }
 
 //TODO need to close resources
@@ -204,13 +245,15 @@ void destroy()
 		al_shutdown_ttf_addon();
 		delete _physicsengine;
 		delete _enemycontroller;
+		delete ready_image;
+		delete _healthbar;
 	}
 	catch (std::exception e) {
 		OutputDebugString(e.what());
 	}
 	
 }
-
+//TODO it might not clean up vector
 void cleanup_resource(void* arg, bool compare_boundary(void*)) {
 	try {
 		std::vector<gameobject*>* resource = (std::vector<gameobject*>*)arg;
@@ -292,7 +335,7 @@ void draw_all() {
 		
 		
 		al_draw_text(font, al_map_rgb(255, 255, 255),9*SCREEN_WIDTH/10, 0, 0, format_string(score, '0', 8).c_str());
-
+		ready_image->draw(is_ready);
 	}
 	catch (std::exception e) {
 		std::stringstream _ss;
@@ -303,53 +346,97 @@ void draw_all() {
 
 void calculate_collisions() {
 	try {
-		int number_of_collisions = _physicsengine->evaluate_collisions(&enemies, &blasts, explosions);
-		score = score + number_of_collisions * 5;
+		int number_of_collisions;
+		int i;
+		sprite* _sprite;
+		
+		for (i = enemies.size() - 1; i >= 0; i--) {
+			_sprite = (sprite*)enemies[i];
+			number_of_collisions = _physicsengine->evaluate_collisions(_sprite, &blasts, explosions, NULL);
+			if (_sprite->get_state() == spritestate::DEAD) {
+				enemies.erase(enemies.begin() + i);
+				delete _sprite;
+			}
+			score = score + number_of_collisions * 5;
+		}
+		//int number_of_collisions = _physicsengine->evaluate_collisions(&enemies, &blasts, explosions);
+		//_physicsengine->evaluate_collisions(spaceship, &enemy_blasts, explosions);
 	}
 	catch (std::exception& e) {
 		std::stringstream _ss;
 		_ss << "Failed to evaluate the collisions: " << e.what();
 		throw std::exception(_ss.str().c_str());
 	}
-	
+
 
 }
 //TODO clean up resources
+enemy* generate_enemy(int x) {
+	spritebuilder _enemybuilder;
+	_enemybuilder.sizex(DEFAULT_SIZE)->sizey(DEFAULT_SIZE)->sorting_layer(1);
+	_enemybuilder.set_health(ENEMY_HEALTH)
+		->set_animation(_constants._enemy._animations)
+		->set_damage(ENEMY_DAMAGE)
+		->set_on_end(_constants._enemy._explosion.c_str())
+		->add_utility(&enemy_blast_builder);
+	_enemybuilder.pos_x(x)->pos_y(-10);
+	enemy* _enemy = (enemy*)_enemybuilder.build_computer();
+	return _enemy;
+}
+
 void spawn_enemies() {
-	int random_number = rand() % 50;
+	int random_number = (rand() % (100 / _difficulty));
 	std::vector<std::string> animations = _constants._enemy._animations;
 	const char* blast_file = _constants._enemy._blast._file.c_str();
 	if (random_number == 1) {
 		int x = rand() % SCREEN_WIDTH;
-		spritebuilder _enemybuilder;
-		_enemybuilder.sizex(DEFAULT_SIZE)->sizey(DEFAULT_SIZE)->sorting_layer(1);
-		_enemybuilder.set_health(ENEMY_HEALTH)
-			->set_animation(_constants._enemy._animations)
-			->set_damage(ENEMY_DAMAGE)
-			->set_on_end(_constants._enemy._explosion.c_str())
-			->set_utility(&enemy_blast_builder);
-		_enemybuilder.pos_x(x)->pos_y(-10);
-		enemy* _enemy = (enemy*)_enemybuilder.build_computer();
-
+		enemy* _enemy = generate_enemy(x);
 		if (!_enemy)
 			throw std::exception("Failed to generate a new enemy");
+
+		bool same_layer = false;
+		_physicsengine->evaluate_sorting(_enemy, &enemies, &same_layer, NULL);
+		
+		if (same_layer) {
+			delete _enemy;
+			return;
+		}
+		
 		enemies.push_back(_enemy);
 	}
 }
 
 void update_all_enemies() {
-	
+	int old_x, old_y;
+	enemy* _enemy;
+	bool same_layer;
 	try {
 		//TODO use parameter speed to move sprite
 		for (int i = 0; i < enemies.size(); i++) {
-			_enemycontroller->move_sprite(enemies[i], ENEMY_SPEED, NULL);
-			_enemycontroller->fire(enemies[i], &enemy_blasts);
+			_enemy = (enemy*)enemies[i];
+			old_x = _enemy->get_x_position();
+			old_y = _enemy->get_y_position();
+			
+			_enemycontroller->move_sprite(_enemy, ENEMY_SPEED, NULL);
+			same_layer = false;
+			_physicsengine->evaluate_sorting(_enemy, &enemies, &same_layer, bounce_enemy);
+
+			if (same_layer) {
+				_enemy->set_position(old_x, old_y);
+			
+			}
+
+
+			int random_chance = (rand() % 30) / _difficulty;
+			if (random_chance == 1) {
+				_enemycontroller->fire(_enemy, &enemy_blasts);
+			}
 		}
 	}
 	catch (std::exception e) {
 		throw std::exception("Failed to update enemy");
 	}
-	
+
 }
 
 
@@ -366,17 +453,29 @@ void update()
 		_ss << "Cannot increment blast: " << e.what();
 		OutputDebugString(_ss.str().c_str());
 	}
-	
+
 	try {
 		for (int i = 0; i < enemy_blasts.size(); i++) {
 			enemy_blasts[i]->increment_y_pos(ENEMY_BLAST_SPEED);
 		}
-	}catch (std::exception e) {
+	}
+	catch (std::exception e) {
 		std::stringstream _ss;
 		_ss << "Cannot increment blast: " << e.what();
 		OutputDebugString(_ss.str().c_str());
 	}
 	try {
+		//TODO find a better way to change state
+		if (is_ready == 1) {
+			auto time = std::chrono::system_clock::now().time_since_epoch();
+			auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+			long _now = millis.count();
+			if ((time_of_last_special + 10000) <= _now) {
+				is_ready = 0;
+			}
+		}
+		
+
 		cleanup_resources();
 		calculate_collisions();
 		draw_all();
@@ -386,24 +485,36 @@ void update()
 	catch (std::exception e) {
 		OutputDebugString(e.what());
 	}
-	
+
 
 	al_flip_display();
 
-	
+
 }
 
 
 void handle_event_mouse_click(ALLEGRO_EVENT* event) {
-	std::vector<twodcolliderbody*> blasts_from_fire;
 	if ((*event).mouse.button == 1) {
-		blasts_from_fire = spaceship->fire();
-		
+		std::vector<twodcolliderbody*> blasts_from_fire = spaceship->fire();
+
 		if (!(&blasts_from_fire))
 			throw std::exception("Failed to create blasts");
 
 		for (twodcolliderbody* blast_ : blasts_from_fire) {
 			blasts.push_back((blast*)blast_);
+		}
+
+	}
+	else if ((*event).mouse.button == 2){
+		if (is_ready == 0) {		
+			twodcolliderbody* _blast = spaceship->fire2();
+			if (!_blast)
+				throw std::exception("Failed to create blasts");
+			blasts.push_back(_blast);
+			auto time = std::chrono::system_clock::now().time_since_epoch();
+			auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+			time_of_last_special = millis.count();
+			is_ready = 1;
 		}
 		
 	}
@@ -419,7 +530,7 @@ void handle_mouse_movement(ALLEGRO_EVENT* event) {
 		int old_y_pos = spaceship->get_y_position();
 		spaceship->set_position(new_x_pos, new_y_pos);
 		bool same_layer = false;
-		_physicsengine->evaluate_sorting(spaceship, &enemies, &same_layer);
+		_physicsengine->evaluate_sorting(spaceship, &enemies, &same_layer, NULL);
 
 		if (same_layer) {
 			spaceship->set_position(old_x_pos, old_y_pos);
@@ -438,7 +549,8 @@ void handle_mouse_movement(ALLEGRO_EVENT* event) {
 //Need to take this out of gamemanger and put into game
 int main()
 {
-
+	
+	set_difficulty(difficulty::HARCORE);
 	init_game();
 
 	//al_register_event_source(event_queue, &data1.event_source);
@@ -525,9 +637,10 @@ void* stars(ALLEGRO_THREAD* thread, void* arg) {
 	*is_ready = true;
 	float rate = 10.0;
 	float y_position;
+	must_init(al_init_primitives_addon(), "primitives");
 	while (!al_get_thread_should_stop(thread)) {
 
-		must_init(al_init_primitives_addon(), "primitives");
+		
 		int x, y;
 
 		for (i = 0; i < _points->size(); i++) {

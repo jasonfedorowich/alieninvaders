@@ -7,13 +7,13 @@ class animation
 private:
 	int position;
 	float x, y;
-	std::vector<ALLEGRO_BITMAP*> bitmaps;
+	std::vector<ALLEGRO_BITMAP*>* _bitmaps;
 
 public:
 	animation();
 	~animation();
 
-	animation(std::vector<ALLEGRO_BITMAP*> bitmaps);
+	animation(std::vector<ALLEGRO_BITMAP*>* bitmaps);
 	void set_position(float, float);
 	float get_x_position();
 	float get_y_position();

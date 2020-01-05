@@ -72,6 +72,11 @@ void gameobject::set_y_position(float y)
 	this->y = y;
 }
 
+void gameobject::set_x_position(float x)
+{
+	this->x = x;
+}
+
 int gameobject::get_sorting_layer()
 {
 	return this->layer;
@@ -81,6 +86,10 @@ int gameobject::get_sorting_layer()
 gameobject* gameobjectbuilder::build()
 {
 	return new gameobject(this);
+}
+
+gameobjectbuilder::~gameobjectbuilder()
+{
 }
 
 gameobjectbuilder* gameobjectbuilder::sizex(float x)
