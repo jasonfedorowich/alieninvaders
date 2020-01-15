@@ -20,8 +20,9 @@ const float ENEMY_BLAST_SPEED = 7.0f;
 const float SPECIAL_BLAST_SIZE_Y = 280.0f;
 const float SPECIAL_BLAST_SIZE_X = 280.0f;
 const float SPECIAL_DAMAGE = 100.0f;
-
-
+const float HEART_HEALING_POWER = 20.0f;
+const float HEART_SIZE = 64.0f;
+const float HEART_SPEED = 5.0f;
 struct c_blast {
 
 	template<class Archive>
@@ -71,6 +72,7 @@ struct game_constants {
 		ar& BOOST_SERIALIZATION_NVP(_player);
 		ar& BOOST_SERIALIZATION_NVP(_enemy);
 		ar& BOOST_SERIALIZATION_NVP(_notifications);
+		ar& BOOST_SERIALIZATION_NVP(_heart);
 	}
 	game_constants();
 	~game_constants();
@@ -78,6 +80,7 @@ struct game_constants {
 	c_player _player;
 	c_enemy _enemy;
 	std::map<int, std::string> _notifications;
+	std::string _heart;
 };
 
 //TODO maybe use enum

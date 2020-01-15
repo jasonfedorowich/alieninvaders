@@ -18,6 +18,7 @@ private:
 	const char* on_end_file;
 	std::vector<void*> _utilities;
 	spritestate _spritestate;
+	int full_health;
 public:
 	friend class spritebuilder;
 
@@ -30,6 +31,7 @@ public:
 	void set_health(int health);
 	int get_health();
 	bool take_damage(int);
+	void heal(int);
 	void remove_health(int damage);
 	spritestate get_state();
 	const char* get_on_end_file();

@@ -42,6 +42,7 @@
 			<second>../resources/images/special/notreadyimage.png</second>
 		</item>
 	</_notifications>
+	<_heart>../resources/images/heart.png</_heart>
 </_constants>
 </boost_serialization>
 

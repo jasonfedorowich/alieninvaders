@@ -140,7 +140,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="animation.cpp" />
-    <ClCompile Include="background.cpp" />
     <ClCompile Include="behaviour.cpp" />
     <ClCompile Include="blast.cpp" />
     <ClCompile Include="bouncingphysics.cpp" />
@@ -154,7 +153,9 @@
     <ClCompile Include="explosion.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="gameobject.cpp" />
+    <ClCompile Include="gui.cpp" />
     <ClCompile Include="healthbar.cpp" />
+    <ClCompile Include="heart.cpp" />
     <ClCompile Include="invaders.cpp" />
     <ClCompile Include="physics.cpp" />
     <ClCompile Include="physicsengine.cpp" />
@@ -170,7 +171,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h" />
-    <ClInclude Include="background.h" />
     <ClInclude Include="behaviour.h" />
     <ClInclude Include="blast.h" />
     <ClInclude Include="bouncingphysics.h" />
@@ -185,7 +185,10 @@
     <ClInclude Include="explosion.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="gameobject.h" />
+    <ClInclude Include="gui.h" />
     <ClInclude Include="healthbar.h" />
+    <ClInclude Include="heart.h" />
+    <ClInclude Include="invaders.h" />
     <ClInclude Include="physics.h" />
     <ClInclude Include="physicsengine.h" />
     <ClInclude Include="scene.h" />

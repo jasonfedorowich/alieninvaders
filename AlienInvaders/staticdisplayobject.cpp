@@ -1,7 +1,6 @@
 #include "staticdisplayobject.h"
 #include <exception>
 #include "explosion.h"
-#include "background.h"
 #include "healthbar.h"
 
 staticdisplayobject::staticdisplayobject()
@@ -116,11 +115,6 @@ staticdisplaybuilder* staticdisplaybuilder::base_y_factor(float y)
 staticdisplayobject* staticdisplaybuilder::build_explosion()
 {
 	return new explosion(this);
-}
-
-staticdisplayobject* staticdisplaybuilder::build_background()
-{
-	return new background(this);
 }
 
 staticdisplayobject* staticdisplaybuilder::build_healthbar()

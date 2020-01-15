@@ -49,6 +49,12 @@
     <Filter Include="Source Files\script">
       <UniqueIdentifier>{54d96075-695c-4d6e-a039-b247d28afaa9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gui">
+      <UniqueIdentifier>{d196d4cb-987f-414a-b4b8-c89ce0e4667d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui">
+      <UniqueIdentifier>{a45c7eca-ffce-4add-880c-cadb12d4ab9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -79,9 +85,6 @@
       <Filter>Source Files\colliders</Filter>
     </ClCompile>
     <ClCompile Include="animation.cpp">
-      <Filter>Source Files\display</Filter>
-    </ClCompile>
-    <ClCompile Include="background.cpp">
       <Filter>Source Files\display</Filter>
     </ClCompile>
     <ClCompile Include="explosion.cpp">
@@ -126,17 +129,23 @@
     <ClCompile Include="score.cpp">
       <Filter>Source Files\game</Filter>
     </ClCompile>
-    <ClCompile Include="constants.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="healthbar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="behaviour.cpp">
       <Filter>Source Files\script</Filter>
     </ClCompile>
     <ClCompile Include="bouncingphysics.cpp">
       <Filter>Source Files\physics</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="constants.cpp">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="healthbar.cpp">
+      <Filter>Source Files\display</Filter>
+    </ClCompile>
+    <ClCompile Include="heart.cpp">
+      <Filter>Source Files\display</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -162,9 +171,6 @@
       <Filter>Header Files\colliders</Filter>
     </ClInclude>
     <ClInclude Include="animation.h">
-      <Filter>Header Files\display</Filter>
-    </ClInclude>
-    <ClInclude Include="background.h">
       <Filter>Header Files\display</Filter>
     </ClInclude>
     <ClInclude Include="explosion.h">
@@ -206,14 +212,8 @@
     <ClInclude Include="enemycontroller.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
-    <ClInclude Include="constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="score.h">
       <Filter>Header Files\game</Filter>
-    </ClInclude>
-    <ClInclude Include="healthbar.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="difficulty.h">
       <Filter>Header Files\game</Filter>
@@ -223,6 +223,21 @@
     </ClInclude>
     <ClInclude Include="bouncingphysics.h">
       <Filter>Header Files\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="heart.h">
+      <Filter>Header Files\colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="invaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="healthbar.h">
+      <Filter>Header Files\display</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Header Files\gui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

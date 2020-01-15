@@ -5,7 +5,7 @@
 
 blast::blast(colliderbodybuilder* builder) : twodcolliderbody(builder)
 {
-
+	
 }
 
 blast::blast()
@@ -18,6 +18,15 @@ blast::~blast()
 	
 }
 
+int blast::get_damage()
+{
+	return this->get_utility();
+}
+
+void blast::set_damage(int dmg)
+{
+	this->set_utility(dmg);
+}
 
 staticdisplayobject* blast::explode() {
 

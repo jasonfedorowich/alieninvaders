@@ -9,7 +9,7 @@
 class blast : public twodcolliderbody
 {
 private:
-	
+	int damage;
 public:
 
 	blast(colliderbodybuilder*);
@@ -17,7 +17,8 @@ public:
 	blast();
 	virtual ~blast();
 
-
+	int get_damage();
+	void set_damage(int);
 	staticdisplayobject* explode() override;
 	
 

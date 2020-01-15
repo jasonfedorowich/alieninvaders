@@ -1,7 +1,8 @@
 #pragma once
 
-enum difficulty {
+enum class difficulty {
+	NONE = 0,
 	EASY = 1,
 	HARD = 5,
-	HARCORE = 10
+	HARDCORE = 10
 };

@@ -46,7 +46,6 @@ public:
 	staticdisplaybuilder* base_y_factor(float);
 	staticdisplaybuilder* set_animation(std::map<int, std::string>);
 	staticdisplayobject* build_explosion();
-	staticdisplayobject* build_background();
 	staticdisplayobject* build_healthbar();
 	staticdisplayobject* build_image();
 

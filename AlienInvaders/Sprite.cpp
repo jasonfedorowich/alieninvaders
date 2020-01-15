@@ -14,6 +14,7 @@ sprite::sprite()
 sprite::sprite(spritebuilder* builder) : gameobject(builder)
 {
 	this->health = builder->health;
+	this->full_health = this->health;
 	this->_animation = builder->_animation;
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
 	this->_utilities = builder->_utilities;
@@ -65,6 +66,14 @@ bool sprite::take_damage(int dmg)
 	this->_spritestate = spritestate::DEAD;
 	return false;
 }
+
+void sprite::heal(int to_apply)
+{
+	health += to_apply;
+	if (health >= full_health)
+		this->health = full_health;
+}
+
 
 void sprite::remove_health(int damage)
 {

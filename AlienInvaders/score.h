@@ -13,10 +13,12 @@ public:
 	void save();
 	void trim();
 	void add(std::string, int);
+	std::vector<score> get_scores();
 };
 struct score {
 
 	std::string name;
 	int value;
 	score(std::string, int);
+	std::string to_string();
 };

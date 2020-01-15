@@ -1,4 +1,5 @@
 #include "GameManager.h"
+#include "heart.h"
 
 //#include "functions.cpp"
 //TODO
@@ -17,13 +18,17 @@
 //TODO cleanup gamemanager
 //add gui elements like buttons see above ideas
 //need to have game using gamemanger and have 3 pages start menu/difficulty menu/ and game
+//TODO add a way to get hearts
+//STILL need sounds
+//left TODO
+//cleanup gamemanager and put things in constant files
+//change difficulty settings
 game_constants _constants = game_constants::load(DEFAULT_GAME_SETTINGS_LOCATION);
 healthbar_serializer _health_bar = healthbar_serializer::load(DEFAULT_HEALTH_BAR_SETTINGS_LOCATION);
 ALLEGRO_EVENT_QUEUE* a_event_q = NULL;
 ALLEGRO_TIMER* timer = NULL;
-ALLEGRO_DISPLAY* disp = NULL;
 ship* spaceship = NULL;
-background* _background = NULL;
+staticdisplayobject* _background = NULL;
 ALLEGRO_THREAD* blast_thread = NULL;
 ALLEGRO_THREAD* cleanup_thread = NULL;
 ALLEGRO_THREAD* stars_thread = NULL;
@@ -31,6 +36,7 @@ controller* _enemycontroller = new enemycontroller();
 colliderbodybuilder enemy_blast_builder;
 colliderbodybuilder _colliderbodybuilder;
 colliderbodybuilder _specialbodybuilder;
+colliderbodybuilder _heartbuilder;
 int time_of_last_special;
 int is_ready;
 //queue<explosion*, 5>* ex_queue = new queue<explosion*, 5>();
@@ -41,26 +47,34 @@ std::vector<gameobject*> enemy_blasts;
 ALLEGRO_FONT* font;
 healthbar* _healthbar;
 int _difficulty;
-
+ALLEGRO_DISPLAY* disp = NULL;
 struct explosion_drawer;
 static std::vector<staticdisplayobject*>* explosions;
+static std::vector<twodcolliderbody*> _hearts;
 static physicsengine* _physicsengine = new physicsengine();
 static std::vector<gameobject*>* _points = new std::vector<gameobject*>();
 //TODO need to add a sorting layer
 //TODO need to add scenes ass levels
-
-long score = 0;
+bool is_running;
+long _score = 0;
 
 static void* calculate_blasts(ALLEGRO_THREAD* thr, void* arg);
 static void* cleanup(ALLEGRO_THREAD* thr, void* arg);
 
 void* stars(ALLEGRO_THREAD* thread, void* arg);
 
+
+std::string format_string(int score, char pad_with, int number_to_pad_to) {
+	std::ostringstream out;
+	out << std::internal << std::setfill(pad_with) << std::setw(number_to_pad_to) << score;
+	return out.str();
+}
+
 void set_difficulty(difficulty _d) {
 	_difficulty = static_cast<int>(_d);
 }
 
-
+//TODO need to move pointer functions to seperate files
 bool compare_to_top(void* arg1) {
 	gameobject* _gameobject = (gameobject*)arg1;
 	if (-250.0f > _gameobject->get_y_position()) {
@@ -86,6 +100,42 @@ void* bounce_enemy(void* arg1, void* arg2) {
 	return nullptr;
 }
 
+void* collide(void* arg1, void* arg2) {
+	sprite* _sprite = (sprite*)arg1;
+	blast* _collider = (blast*)arg2;
+	int score_to_increase = 0;
+	int dmg = _collider->get_damage();
+
+	if (!_sprite->take_damage(dmg)) {
+		explosions->push_back(_sprite->explode());
+		score_to_increase += 10;
+	}
+
+	if (!_collider->is_invulerable()) {
+		explosions->push_back(_collider->explode());
+		delete _collider;
+	}
+
+	score_to_increase++;
+	_score = _score + score_to_increase * 5;
+	return NULL;
+}
+
+void* heal(void* arg1, void* arg2) {
+	sprite* _sprite = (sprite*)arg1;
+	heart* _collider = (heart*)arg2;
+	_sprite->heal(_collider->get_healing_power());
+	delete _collider;
+	return NULL;
+}
+
+void* test_ptr_function(void* arg1, void* arg2) {
+	gui::mouse_event* _event = (gui::mouse_event*) arg1;
+	gui::mouse_event_type* _type = (gui::mouse_event_type*) arg2;
+	std::cout << "Button clicked" << std::endl;
+	return NULL;
+}
+
 void must_init(bool test, const char* description)
 {
 	if (test) return;
@@ -94,25 +144,38 @@ void must_init(bool test, const char* description)
 	exit(1);
 }
 
-void init_game()
-{
-	//time_t now = time(0);
-	//tm _tm;
-//	localtime_s(&_tm, &now);
-//	time_of_last_special = _tm.tm_min;
-	
-	is_ready = 0;
+void init_allegro() {
 	must_init(al_init(), "allegro");
 	must_init(al_install_keyboard(), "keyboard");
 	must_init(al_init_image_addon(), "image addon");
 	must_init(al_install_mouse(), "mouse");
 	must_init(al_init_font_addon(), "font");
 	must_init(al_init_ttf_addon(), "ttf");
-
+	al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
+	al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
+	al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
+	must_init(al_init_primitives_addon(), "primitives");
+	disp = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+	must_init(disp, "display");
 	timer = al_create_timer(1.0 / 30.0);
-	
 	must_init(timer, "timer");
+}
 
+ALLEGRO_DISPLAY* get_display()
+{
+	return disp;
+}
+
+ALLEGRO_TIMER* get_timer()
+{
+	return timer;
+}
+
+
+
+void init_game()
+{
+	is_ready = 0;
 	a_event_q = al_create_event_queue();
 	must_init(a_event_q, "queue");
 
@@ -120,25 +183,13 @@ void init_game()
 
 	must_init(font, "font");
 
-	al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
-	al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
-	al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
-
-	disp = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-	must_init(disp, "display");
-	al_hide_mouse_cursor(disp);
-
-
-
-	must_init(al_init_primitives_addon(), "primitives");
-
 	al_register_event_source(a_event_q, al_get_keyboard_event_source());
 	al_register_event_source(a_event_q, al_get_display_event_source(disp));
 	al_register_event_source(a_event_q, al_get_timer_event_source(timer));
 	al_register_event_source(a_event_q, al_get_mouse_event_source());
 
 
-	enemy_blast_builder.set_damage(ENEMY_DAMAGE)
+	enemy_blast_builder.set_utility(ENEMY_DAMAGE)
 		->set_image(_constants._enemy._blast._file.c_str())
 		->set_on_end(_constants._enemy._blast._explosion.c_str())
 		->invulnerability(false)
@@ -155,7 +206,7 @@ void init_game()
 		sorting_layer(1);
 	
 
-		_colliderbodybuilder.set_damage(PLAYER_DAMAGE)
+		_colliderbodybuilder.set_utility(PLAYER_DAMAGE)
 			->set_image(_constants._player._blast._file.c_str())
 			->set_on_end(_constants._player._blast._explosion.c_str())
 			->invulnerability(false)
@@ -163,12 +214,20 @@ void init_game()
 			->sizey(DEFAULT_BLAST_SIZE)
 			->sorting_layer(1);
 	
-		_specialbodybuilder.set_damage(SPECIAL_DAMAGE)
+		_specialbodybuilder.set_utility(SPECIAL_DAMAGE)
 			->set_image(_constants._player._special.c_str())
 			->invulnerability(true)
 			->sizex(SPECIAL_BLAST_SIZE_X)
 			->sizey(SPECIAL_BLAST_SIZE_Y)
 			->sorting_layer(1);
+
+		_heartbuilder.set_utility(HEART_HEALING_POWER)
+			->set_image(_constants._heart.c_str())
+			->invulnerability(false)
+			->sizex(HEART_SIZE)
+			->sizey(HEART_SIZE)
+			->sorting_layer(2)
+			->pos_y(-10);
 
 		spritebuilder* shipbuilder = (spritebuilder*)objectbuilder;
 
@@ -187,7 +246,7 @@ void init_game()
 	//TODO need to put this file in XML
 	_staticdisplybuilder->image("../resources/images/level1.png");
 
-	_background = (background*)_staticdisplybuilder->build_background();
+	_background = (staticdisplayobject*)_staticdisplybuilder->build_image();
 
 	explosions = new std::vector<staticdisplayobject*>();
 	//blast_thread = al_create_thread(calculate_blasts, NULL);
@@ -230,29 +289,44 @@ void destroy()
 		destroy(&enemies, false);
 		destroy(_points, true);
 		destroy(&enemy_blasts, false);
-
 		al_destroy_thread(stars_thread);
-		//al_destroy_thread(cleanup_thread);
 		delete spaceship;
-		al_destroy_event_queue(a_event_q);
-		al_destroy_timer(timer);
-		al_destroy_display(disp);
+		al_destroy_event_queue(a_event_q);		
 		al_destroy_font(font);
-		delete _background;
-		al_shutdown_primitives_addon();
-		al_shutdown_image_addon();
-		al_shutdown_font_addon();
-		al_shutdown_ttf_addon();
+		delete _background;		
 		delete _physicsengine;
 		delete _enemycontroller;
 		delete ready_image;
 		delete _healthbar;
+		//TODO need to clean up resources
 	}
 	catch (std::exception e) {
 		OutputDebugString(e.what());
 	}
 	
 }
+void shut_down_allegro() {
+	try {
+		al_shutdown_primitives_addon();
+		al_shutdown_image_addon();
+		al_shutdown_font_addon();
+		al_shutdown_ttf_addon();
+		al_destroy_timer(timer);
+		al_destroy_display(disp);
+		al_uninstall_mouse();
+		al_uninstall_keyboard();
+	}
+	catch (std::exception e) {
+		OutputDebugString(e.what());
+	}
+	
+}
+
+int get_score()
+{
+	return _score;
+}
+
 //TODO it might not clean up vector
 void cleanup_resource(void* arg, bool compare_boundary(void*)) {
 	try {
@@ -277,6 +351,7 @@ void cleanup_resources() {
 		cleanup_resource(&blasts, compare_to_top);
 		cleanup_resource(&enemy_blasts, compare_to_bottom);
 		cleanup_resource(&enemies, compare_to_bottom);
+		cleanup_resource(&_hearts, compare_to_bottom);
 		
 		int i;
 		explosion* _explosion;
@@ -325,6 +400,7 @@ void draw_all() {
 		draw(explosions);
 		draw(&enemies);
 		draw(&enemy_blasts);
+		draw(&_hearts);
 		_healthbar->draw(spaceship->get_health());
 		int i;
 		ALLEGRO_COLOR color = al_map_rgb(255, 255, 255);
@@ -334,8 +410,9 @@ void draw_all() {
 		}
 		
 		
-		al_draw_text(font, al_map_rgb(255, 255, 255),9*SCREEN_WIDTH/10, 0, 0, format_string(score, '0', 8).c_str());
+		al_draw_text(font, al_map_rgb(255, 255, 255),9*SCREEN_WIDTH/10, 0, 0, format_string(_score, '0', 8).c_str());
 		ready_image->draw(is_ready);
+		//_test_button->draw();
 	}
 	catch (std::exception e) {
 		std::stringstream _ss;
@@ -352,15 +429,16 @@ void calculate_collisions() {
 		
 		for (i = enemies.size() - 1; i >= 0; i--) {
 			_sprite = (sprite*)enemies[i];
-			number_of_collisions = _physicsengine->evaluate_collisions(_sprite, &blasts, explosions, NULL);
+			number_of_collisions = _physicsengine->evaluate_collisions(_sprite, &blasts, NULL, collide);
 			if (_sprite->get_state() == spritestate::DEAD) {
 				enemies.erase(enemies.begin() + i);
 				delete _sprite;
 			}
-			score = score + number_of_collisions * 5;
+			
 		}
+		_physicsengine->evaluate_collisions(spaceship, &_hearts, NULL, heal);
 		//int number_of_collisions = _physicsengine->evaluate_collisions(&enemies, &blasts, explosions);
-		//_physicsengine->evaluate_collisions(spaceship, &enemy_blasts, explosions);
+		_physicsengine->evaluate_collisions(spaceship, &enemy_blasts, NULL, collide);
 	}
 	catch (std::exception& e) {
 		std::stringstream _ss;
@@ -386,8 +464,8 @@ enemy* generate_enemy(int x) {
 
 void spawn_enemies() {
 	int random_number = (rand() % (100 / _difficulty));
-	std::vector<std::string> animations = _constants._enemy._animations;
-	const char* blast_file = _constants._enemy._blast._file.c_str();
+	//std::vector<std::string> animations = _constants._enemy._animations;
+	//const char* blast_file = _constants._enemy._blast._file.c_str();
 	if (random_number == 1) {
 		int x = rand() % SCREEN_WIDTH;
 		enemy* _enemy = generate_enemy(x);
@@ -439,9 +517,26 @@ void update_all_enemies() {
 
 }
 
+void spawn_hearts() {
+	int random_number = rand() % 20;
+	
+	if (random_number == 1) {
+		int x = rand() % SCREEN_WIDTH;
+		_heartbuilder.pos_x(x);
+		twodcolliderbody* _heart = _heartbuilder.build_heart();
+		if (!_heart)
+			throw std::exception("failed to create a heart");
+		_hearts.push_back(_heart);
+	}
+}
 
 void update()
 {
+	if (0 >= spaceship->get_health()) {
+		is_running = false;
+		return;
+	}
+		
 	try {
 
 		for (int i = 0; i < blasts.size(); i++) {
@@ -457,6 +552,9 @@ void update()
 	try {
 		for (int i = 0; i < enemy_blasts.size(); i++) {
 			enemy_blasts[i]->increment_y_pos(ENEMY_BLAST_SPEED);
+		}
+		for (int i = 0; i < _hearts.size(); i++) {
+			_hearts[i]->increment_y_pos(HEART_SPEED);
 		}
 	}
 	catch (std::exception e) {
@@ -475,7 +573,7 @@ void update()
 			}
 		}
 		
-
+		spawn_hearts();
 		cleanup_resources();
 		calculate_collisions();
 		draw_all();
@@ -494,7 +592,8 @@ void update()
 
 
 void handle_event_mouse_click(ALLEGRO_EVENT* event) {
-	if ((*event).mouse.button == 1) {
+//	gui::mouse_event _event((*event).mouse.x, (*event).mouse.y, gui::mouse_event_type::MOUSE_DOWN);
+	if (event->mouse.button == 1) {
 		std::vector<twodcolliderbody*> blasts_from_fire = spaceship->fire();
 
 		if (!(&blasts_from_fire))
@@ -505,7 +604,7 @@ void handle_event_mouse_click(ALLEGRO_EVENT* event) {
 		}
 
 	}
-	else if ((*event).mouse.button == 2){
+	else if (event->mouse.button == 2){
 		if (is_ready == 0) {		
 			twodcolliderbody* _blast = spaceship->fire2();
 			if (!_blast)
@@ -523,8 +622,8 @@ void handle_event_mouse_click(ALLEGRO_EVENT* event) {
 //TODO should we use controller?
 void handle_mouse_movement(ALLEGRO_EVENT* event) {
 	try {
-		int new_x_pos = (*event).mouse.x;
-		int new_y_pos = (*event).mouse.y;
+		int new_x_pos = event->mouse.x;
+		int new_y_pos = event->mouse.y;
 
 		int old_x_pos = spaceship->get_x_position();
 		int old_y_pos = spaceship->get_y_position();
@@ -547,11 +646,8 @@ void handle_mouse_movement(ALLEGRO_EVENT* event) {
 }
 
 //Need to take this out of gamemanger and put into game
-int main()
+void run_game()
 {
-	
-	set_difficulty(difficulty::HARCORE);
-	init_game();
 
 	//al_register_event_source(event_queue, &data1.event_source);
 	bool stars_ready = false;
@@ -569,8 +665,7 @@ int main()
 
 
 	al_start_timer(timer);
-
-	bool isRunning = true;
+	is_running = true;
 	double old_time = al_get_time();
 
 
@@ -578,7 +673,7 @@ int main()
 	//TODO maybe better to switch to switch loop
 	ALLEGRO_EVENT event;
 
-	while (isRunning) {
+	while (is_running) {
 
 		al_wait_for_event(a_event_q, &event);
 
@@ -591,8 +686,11 @@ int main()
 			break;
 
 		case ALLEGRO_EVENT_KEY_DOWN:
+			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				is_running = false;
+			break;
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			isRunning = false;
+			is_running = false;
 			break;
 		case ALLEGRO_EVENT_MOUSE_AXES:
 			handle_mouse_movement(&event);
@@ -600,6 +698,7 @@ int main()
 		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 			handle_event_mouse_click(&event);
 			break;
+			
 		}
 
 		if (redraw && al_is_event_queue_empty(a_event_q)) {
@@ -607,15 +706,11 @@ int main()
 			
 		}
 	}
+	al_stop_timer(timer);
 	//TODO this will have to be changed once we remove this hard loop		
 		//need user input to get name
 	
-	scoreboard _scoreboard("../resources/gamedata/highscores/highscores.txt");
-	_scoreboard.add("jason", score);
-	_scoreboard.sort();
-	_scoreboard.trim();
-	_scoreboard.save();
-
+	
 	destroy();
 
 	//void* result;
@@ -623,7 +718,15 @@ int main()
 	//	puts("error joining");
 	//}
 
-	return 0;
+}
+
+
+
+void play_game(difficulty _difficulty)
+{
+	set_difficulty(_difficulty);
+	init_game();
+	run_game();
 }
 
 void* stars(ALLEGRO_THREAD* thread, void* arg) {

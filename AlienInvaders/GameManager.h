@@ -13,7 +13,6 @@
 #include <vector>
 #include "blast.h"
 #include <iostream>
-#include "background.h"
 #include "twodcolliderbody.h"
 #include "enemy.h"
 #include "explosion.h"
@@ -35,14 +34,19 @@
 #include "healthbar.h"
 #include "difficulty.h"
 #include <chrono>
+#include "gui.h"
+#include "behaviour.h"
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 static const std::string DEFAULT_HEALTH_BAR_SETTINGS_LOCATION = "../resources/gamedata/constants/healthbar.xml";
 static const std::string DEFAULT_GAME_SETTINGS_LOCATION = "../resources/gamedata/constants/constants.xml";
 
 
-std::string format_string(int score, char pad_with, int number_to_pad_to) {
-	std::ostringstream out;
-	out << std::internal << std::setfill(pad_with) << std::setw(number_to_pad_to) << score;
-	return out.str();
-}
+void init_allegro();
+ALLEGRO_DISPLAY* get_display();
+ALLEGRO_TIMER* get_timer();
+void play_game(difficulty);
+void shut_down_allegro();
+int get_score();
+
+void add_behaviour(behaviour*);

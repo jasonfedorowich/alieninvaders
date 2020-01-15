@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <fstream>
 #include <algorithm>    // std::sort
-
+#include <sstream>
+#include <iostream>
+#include <string>
 
 std::vector<std::string> split(std::string str, char delim = ' ') {
 	std::vector<std::string> cont;
@@ -73,8 +75,20 @@ void scoreboard::add(std::string name, int value)
 	this->scores.push_back(_score);
 }
 
+std::vector<score> scoreboard::get_scores()
+{
+	return this->scores;
+}
+
 score::score(std::string name, int value)
 {
 	this->name = name;
 	this->value = value;
+}
+
+std::string score::to_string()
+{
+	std::stringstream _ss;
+	_ss << name << " " << value;
+	return _ss.str();
 }

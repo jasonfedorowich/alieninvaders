@@ -1,11 +1,3 @@
-﻿  GameManager.cpp
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.h(21,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(300,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(328,17): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(412,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(444,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(455,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(643,17): warning C4018: '<': signed/unsigned mismatch
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(641,10): warning C4101: 'y': unreferenced local variable
-C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.cpp(641,7): warning C4101: 'x': unreferenced local variable
+﻿  invaders.cpp
+C:\Users\jason\Documents\C Projects\AlienInvaders\AlienInvaders\GameManager.h(20,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
   AlienInvaders.vcxproj -> C:\Users\jason\Documents\C Projects\AlienInvaders\Debug\AlienInvaders.exe

@@ -14,7 +14,7 @@ class twodcolliderbody : public gameobject
 private:
 	float x, y;
 	boxcollider* _boxcollider;
-	int damage;
+	int utility;
 	ALLEGRO_BITMAP* bitmap;
 	const char* on_end_file;
 	bool _invulnerable;
@@ -28,8 +28,8 @@ public:
 	virtual void draw();
 	boxcollider* get_collider();
 	const char* get_on_end_file();
-	int get_damage();
-	void set_damage(int);
+	int get_utility();
+	void set_utility(int);
 	bool is_invulerable();
 };
 
@@ -37,7 +37,7 @@ public:
 class colliderbodybuilder : public gameobjectbuilder{
 
 private:
-	int damage;
+	int utility;
 	const char* image;
 	const char* on_end;
 	bool _invulnerable;
@@ -46,10 +46,11 @@ public:
 	~colliderbodybuilder();
 	friend class twodcolliderbody;
 
-	colliderbodybuilder* set_damage(int);
+	colliderbodybuilder* set_utility(int);
 	colliderbodybuilder* set_image(const char*);
 	colliderbodybuilder* set_on_end(const char*);
 	colliderbodybuilder* invulnerability(bool);
 	twodcolliderbody* build_blast();
+	twodcolliderbody* build_heart();
 
 };

@@ -1,7 +1,7 @@
 #include "twodcolliderbody.h"
 #include <exception>
 #include "blast.h"
-
+#include "heart.h"
 
 twodcolliderbody::twodcolliderbody()
 {
@@ -17,10 +17,9 @@ twodcolliderbody::~twodcolliderbody()
 twodcolliderbody::twodcolliderbody(colliderbodybuilder* builder) : gameobject(builder)
 {
 	this->_boxcollider = new boxcollider(this->get_size_x(), this->get_size_y());
-	this->damage = builder->damage;
 	this->on_end_file = builder->on_end;
 	this->_invulnerable = builder->_invulnerable;
-
+	this->utility = builder->utility;
 	ALLEGRO_BITMAP* bitmap = al_load_bitmap(builder->image);
 	if (!bitmap)
 		throw std::exception("Failed to init spaceship bitmap");
@@ -60,15 +59,16 @@ const char* twodcolliderbody::get_on_end_file()
 	return this->on_end_file;
 }
 
-int twodcolliderbody::get_damage()
+int twodcolliderbody::get_utility()
 {
-	return this->damage;
+	return this->utility;
 }
 
-void twodcolliderbody::set_damage(int dmg)
+void twodcolliderbody::set_utility(int util)
 {
-	this->damage = dmg;
+	this->utility = util;
 }
+
 
 bool twodcolliderbody::is_invulerable()
 {
@@ -83,9 +83,9 @@ colliderbodybuilder::~colliderbodybuilder()
 {
 }
 
-colliderbodybuilder* colliderbodybuilder::set_damage(int damage)
+colliderbodybuilder* colliderbodybuilder::set_utility(int util)
 {
-	this->damage = damage;
+	this->utility = util;
 	return this;
 }
 
@@ -110,4 +110,9 @@ colliderbodybuilder* colliderbodybuilder::invulnerability(bool invulnerable)
 twodcolliderbody* colliderbodybuilder::build_blast()
 {
 	return new blast(this);
+}
+
+twodcolliderbody* colliderbodybuilder::build_heart()
+{
+	return new heart(this);
 }

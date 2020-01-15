@@ -20,6 +20,15 @@ boxcollider::boxcollider(float width, float height)
 	this->y = 0.0;
 }
 
+boxcollider::boxcollider(float width, float height, float x, float y)
+{
+	this->height = height;
+	this->width = width;
+	set_position(x, y);
+}
+
+
+
 void boxcollider::set_position(float x, float y)
 {
 	this->x = x;
@@ -65,5 +74,23 @@ bool is_collision(boxcollider* box1, boxcollider* box2)
 	{
 		return false;
 	}
+	return true;
+}
+
+bool is_collision(int _x, int _y, boxcollider* _box)
+{
+	float box_x = _box->get_x_position();
+	float box_y = _box->get_y_position();
+	float width = _box->get_width();
+	float height = _box->get_height();
+
+	if ((_x > box_x + width ) ||
+		(_y > box_y + height)||
+		(box_x > _x )||
+		(box_y > _y)) {
+		return false;
+	}
+
+
 	return true;
 }
