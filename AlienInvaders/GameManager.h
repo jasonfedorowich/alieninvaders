@@ -36,6 +36,8 @@
 #include <chrono>
 #include "gui.h"
 #include "behaviour.h"
+#include "heart.h"
+
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 static const std::string DEFAULT_HEALTH_BAR_SETTINGS_LOCATION = "../resources/gamedata/constants/healthbar.xml";
@@ -48,5 +50,6 @@ ALLEGRO_TIMER* get_timer();
 void play_game(difficulty);
 void shut_down_allegro();
 int get_score();
-
+void destroy();
 void add_behaviour(behaviour*);
+void clear_score();

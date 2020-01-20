@@ -2,6 +2,7 @@
 scoreboard* _scoreboard;
 
 //TODO need to move constants into a file
+//TODO there might be a memory leak in here
 void start_screen() {
 	
 	start_screen_running = true;
@@ -199,6 +200,7 @@ void prompt() {
 	al_flip_display();
 	al_stop_timer(timer);
 	al_destroy_font(font);
+	clear_score();
 
 }
 void show_scores() {
@@ -282,10 +284,9 @@ int main()
 		difficulty_screen();
 		play_game(_difficulty);
 		prompt();
-		//TODO fix the replay button
 		show_scores();
 	}
-	
+	destroy();
 	shut_down_allegro();
 	return 0;
 }

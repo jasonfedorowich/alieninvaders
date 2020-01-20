@@ -1,5 +1,4 @@
 #include "GameManager.h"
-#include "heart.h"
 
 //#include "functions.cpp"
 //TODO
@@ -23,6 +22,7 @@
 //left TODO
 //cleanup gamemanager and put things in constant files
 //change difficulty settings
+//TODO cleanup game manager
 game_constants _constants = game_constants::load(DEFAULT_GAME_SETTINGS_LOCATION);
 healthbar_serializer _health_bar = healthbar_serializer::load(DEFAULT_HEALTH_BAR_SETTINGS_LOCATION);
 ALLEGRO_EVENT_QUEUE* a_event_q = NULL;
@@ -49,18 +49,15 @@ healthbar* _healthbar;
 int _difficulty;
 ALLEGRO_DISPLAY* disp = NULL;
 struct explosion_drawer;
-static std::vector<staticdisplayobject*>* explosions;
-static std::vector<twodcolliderbody*> _hearts;
+static std::vector<gameobject*> explosions;
+static std::vector<gameobject*> _hearts;
 static physicsengine* _physicsengine = new physicsengine();
-static std::vector<gameobject*>* _points = new std::vector<gameobject*>();
+static std::vector<gameobject*> _points;
 //TODO need to add a sorting layer
 //TODO need to add scenes ass levels
 bool is_running;
 long _score = 0;
-
-static void* calculate_blasts(ALLEGRO_THREAD* thr, void* arg);
-static void* cleanup(ALLEGRO_THREAD* thr, void* arg);
-
+static int game_sequence = 0;
 void* stars(ALLEGRO_THREAD* thread, void* arg);
 
 
@@ -107,12 +104,12 @@ void* collide(void* arg1, void* arg2) {
 	int dmg = _collider->get_damage();
 
 	if (!_sprite->take_damage(dmg)) {
-		explosions->push_back(_sprite->explode());
+		explosions.push_back(_sprite->explode());
 		score_to_increase += 10;
 	}
 
 	if (!_collider->is_invulerable()) {
-		explosions->push_back(_collider->explode());
+		explosions.push_back(_collider->explode());
 		delete _collider;
 	}
 
@@ -176,18 +173,11 @@ ALLEGRO_TIMER* get_timer()
 void init_game()
 {
 	is_ready = 0;
-	a_event_q = al_create_event_queue();
-	must_init(a_event_q, "queue");
+	
 
 	font = al_load_ttf_font("../resources/fonts/pirulen.ttf", 12, 0);
 
 	must_init(font, "font");
-
-	al_register_event_source(a_event_q, al_get_keyboard_event_source());
-	al_register_event_source(a_event_q, al_get_display_event_source(disp));
-	al_register_event_source(a_event_q, al_get_timer_event_source(timer));
-	al_register_event_source(a_event_q, al_get_mouse_event_source());
-
 
 	enemy_blast_builder.set_utility(ENEMY_DAMAGE)
 		->set_image(_constants._enemy._blast._file.c_str())
@@ -241,23 +231,11 @@ void init_game()
 	spaceship = (ship*)shipbuilder->build_player();
 	delete shipbuilder;
 
-	staticdisplaybuilder* _staticdisplybuilder = new staticdisplaybuilder();
-	_staticdisplybuilder->pos_x(600.0)->pos_y(100.0);
-	//TODO need to put this file in XML
-	_staticdisplybuilder->image("../resources/images/level1.png");
+	staticdisplaybuilder _staticdisplybuilder;
+	_staticdisplybuilder.pos_x(600.0)->pos_y(100.0);
+	_staticdisplybuilder.image("../resources/images/level1.png");
 
-	_background = (staticdisplayobject*)_staticdisplybuilder->build_image();
-
-	explosions = new std::vector<staticdisplayobject*>();
-	//blast_thread = al_create_thread(calculate_blasts, NULL);
-	
-	//cleanup_thread = al_create_thread(cleanup, _synchronizer);
-
-	//TODO for test
-	//explosions = new std::vector<explosion*>();
-	//if (pthread_create(&t0, NULL, create_new_asteroid, NULL) == -1) {
-	//	puts("cant create thread");
-	//}
+	_background = (staticdisplayobject*)_staticdisplybuilder.build_image();
 	staticdisplaybuilder _healthbarbuilder;
 	_healthbarbuilder.pos_x(10)->pos_y(-30)->sorting_layer(1);
 	_healthbarbuilder.set_animation(_health_bar._animations);
@@ -284,12 +262,11 @@ void destroy(void* arg, bool hasBeenAllocated) {
 void destroy()
 {
 	try {
-		destroy(explosions, true);
+		destroy(&explosions, false);
 		destroy(&blasts, false);
 		destroy(&enemies, false);
-		destroy(_points, true);
+		destroy(&_points, true);
 		destroy(&enemy_blasts, false);
-		al_destroy_thread(stars_thread);
 		delete spaceship;
 		al_destroy_event_queue(a_event_q);		
 		al_destroy_font(font);
@@ -304,6 +281,10 @@ void destroy()
 		OutputDebugString(e.what());
 	}
 	
+}
+void clear_score()
+{
+	_score = 0;
 }
 void shut_down_allegro() {
 	try {
@@ -355,10 +336,10 @@ void cleanup_resources() {
 		
 		int i;
 		explosion* _explosion;
-		for (i = explosions->size() - 1; i >= 0; i--) {
-			_explosion = (explosion*)(*explosions)[i];
+		for (i = explosions.size() - 1; i >= 0; i--) {
+			_explosion = (explosion*)explosions[i];
 			if (_explosion->is_drawn()) {
-				explosions->erase(explosions->begin() + i);
+				explosions.erase(explosions.begin() + i);
 				delete _explosion;
 			}
 
@@ -396,17 +377,14 @@ void draw_all() {
 
 		_background->draw();
 		spaceship->draw();
-		draw(&blasts);
-		draw(explosions);
+		draw(&explosions);
 		draw(&enemies);
-		draw(&enemy_blasts);
-		draw(&_hearts);
 		_healthbar->draw(spaceship->get_health());
 		int i;
 		ALLEGRO_COLOR color = al_map_rgb(255, 255, 255);
-		for (i = 0; i < _points->size(); i++) {
+		for (i = 0; i < _points.size(); i++) {
 			//FIX this should just be calling ->draw();
-			al_draw_pixel((*_points)[i]->get_x_position(), (*_points)[i]->get_y_position(), color);
+			al_draw_pixel(_points[i]->get_x_position(), _points[i]->get_y_position(), color);
 		}
 		
 		
@@ -530,6 +508,15 @@ void spawn_hearts() {
 	}
 }
 
+void increment_y_and_draw(std::vector<gameobject*>* _gameobjects, float speed) {
+	gameobject* _gameobject;
+	for (int i = 0; i < _gameobjects->size(); i++) {
+		_gameobject = (*_gameobjects)[i];
+		_gameobject->increment_y_pos(speed);
+		_gameobject->draw();
+	}
+}
+
 void update()
 {
 	if (0 >= spaceship->get_health()) {
@@ -537,31 +524,8 @@ void update()
 		return;
 	}
 		
-	try {
+	
 
-		for (int i = 0; i < blasts.size(); i++) {
-			blasts[i]->increment_y_pos(BLAST_SPEED);
-		}
-	}
-	catch (std::exception e) {
-		std::stringstream _ss;
-		_ss << "Cannot increment blast: " << e.what();
-		OutputDebugString(_ss.str().c_str());
-	}
-
-	try {
-		for (int i = 0; i < enemy_blasts.size(); i++) {
-			enemy_blasts[i]->increment_y_pos(ENEMY_BLAST_SPEED);
-		}
-		for (int i = 0; i < _hearts.size(); i++) {
-			_hearts[i]->increment_y_pos(HEART_SPEED);
-		}
-	}
-	catch (std::exception e) {
-		std::stringstream _ss;
-		_ss << "Cannot increment blast: " << e.what();
-		OutputDebugString(_ss.str().c_str());
-	}
 	try {
 		//TODO find a better way to change state
 		if (is_ready == 1) {
@@ -579,6 +543,18 @@ void update()
 		draw_all();
 		spawn_enemies();
 		update_all_enemies();
+
+		try {
+			increment_y_and_draw(&blasts, BLAST_SPEED);
+			increment_y_and_draw(&enemy_blasts, ENEMY_BLAST_SPEED);
+			increment_y_and_draw(&_hearts, HEART_SPEED);
+
+		}
+		catch (std::exception e) {
+			std::stringstream _ss;
+			_ss << "Cannot increment blast: " << e.what();
+			OutputDebugString(_ss.str().c_str());
+		}
 	}
 	catch (std::exception e) {
 		OutputDebugString(e.what());
@@ -644,13 +620,46 @@ void handle_mouse_movement(ALLEGRO_EVENT* event) {
 	
 	
 }
+void clear(std::vector<gameobject*>* _gameobjects ) {
+	for (int i = _gameobjects->size() - 1; i >= 0; i--) {
+		gameobject* _gameobject = (*_gameobjects)[i];
+		_gameobjects->erase(_gameobjects->begin() + i);
+		delete _gameobject;
+		
+	}
+	
+}
+
+
+void clear_all() {
+	clear(&enemies);
+	clear(&enemy_blasts);
+	clear(&blasts);
+	clear(&_hearts);
+	clear(&explosions);
+	clear(&_points);
+
+	spaceship->set_health(PLAYER_HEALTH);
+	al_destroy_thread(stars_thread);
+	al_destroy_event_queue(a_event_q);
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_flip_display();
+}
 
 //Need to take this out of gamemanger and put into game
 void run_game()
 {
-
+	
 	//al_register_event_source(event_queue, &data1.event_source);
 	bool stars_ready = false;
+	a_event_q = al_create_event_queue();
+	must_init(a_event_q, "queue");
+
+	al_register_event_source(a_event_q, al_get_keyboard_event_source());
+	al_register_event_source(a_event_q, al_get_display_event_source(disp));
+	al_register_event_source(a_event_q, al_get_timer_event_source(timer));
+	al_register_event_source(a_event_q, al_get_mouse_event_source());
+
 
 	stars_thread = al_create_thread(stars, &stars_ready);
 	al_start_thread(stars_thread);
@@ -667,8 +676,11 @@ void run_game()
 	al_start_timer(timer);
 	is_running = true;
 	double old_time = al_get_time();
-
-
+	spaceship->set_x_position(SCREEN_WIDTH / 2);
+	spaceship->set_y_position(SCREEN_HEIGHT / 2);
+	
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_flip_display();
 	//TODO create a controller
 	//TODO maybe better to switch to switch loop
 	ALLEGRO_EVENT event;
@@ -710,8 +722,8 @@ void run_game()
 	//TODO this will have to be changed once we remove this hard loop		
 		//need user input to get name
 	
-	
-	destroy();
+	//TODO need to cleanup reset it draws wierd full health on start
+	clear_all();
 
 	//void* result;
 	//if (pthread_join(t0, &result) == -1) {
@@ -725,8 +737,9 @@ void run_game()
 void play_game(difficulty _difficulty)
 {
 	set_difficulty(_difficulty);
-	init_game();
+	if(game_sequence == 0) init_game();
 	run_game();
+	game_sequence++;
 }
 
 void* stars(ALLEGRO_THREAD* thread, void* arg) {
@@ -734,7 +747,7 @@ void* stars(ALLEGRO_THREAD* thread, void* arg) {
 	bool* is_ready = (bool*)arg;
 
 	for (i = 0; i < 50; i++) {
-		_points->push_back(staticdisplayfactory::create_point(rand() % SCREEN_HEIGHT, rand() % SCREEN_WIDTH));
+		_points.push_back(staticdisplayfactory::create_point(rand() % SCREEN_HEIGHT, rand() % SCREEN_WIDTH));
 	}
 	
 	*is_ready = true;
@@ -746,12 +759,12 @@ void* stars(ALLEGRO_THREAD* thread, void* arg) {
 		
 		int x, y;
 
-		for (i = 0; i < _points->size(); i++) {
-			y_position = (*_points)[i]->get_y_position();
+		for (i = 0; i < _points.size(); i++) {
+			y_position = _points[i]->get_y_position();
 			if(y_position > SCREEN_HEIGHT)
-				(*_points)[i]->set_y_position(0);
+				_points[i]->set_y_position(0);
 			
-			(*_points)[i]->increment_y_pos(rate);
+			_points[i]->increment_y_pos(rate);
 		}
 		al_rest(0.04);
 
